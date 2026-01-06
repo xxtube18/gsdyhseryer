@@ -6,7 +6,7 @@
     <style>
         :root { 
             --bg: #050505; 
-            --panel: rgba(15, 15, 20, 0.95); 
+            --panel: rgba(15, 15, 20, 0.98); 
             --accent: #00F2FF; 
             --nevethon: #FF4500; 
             --save: #39FF14; 
@@ -35,6 +35,7 @@
             -webkit-text-fill-color: transparent; 
             font-size: 1.6rem; 
             letter-spacing: 2px;
+            margin-right: 20px;
         }
 
         input, select { 
@@ -46,6 +47,7 @@
         button { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 900; transition: 0.3s; text-transform: UPPERCASE; }
         .btn-add { background: var(--accent); color: #000; }
         .btn-share { background: var(--nevethon); color: #FFF; box-shadow: 0 0 20px rgba(255, 69, 0, 0.4); }
+        .btn-share:hover { transform: scale(1.05); }
 
         .stream-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 20px; }
         .video-container { position: relative; background: #000; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 2px solid #222; }
@@ -54,31 +56,43 @@
         
         .remove-btn { position: absolute; top: 10px; right: 10px; background: rgba(255, 0, 0, 0.8); color: WHITE; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; z-index: 5; font-weight: 900; }
         
-        .tag { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.8); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--accent); color: var(--accent); font-size: 12px; }
+        #shareArea { 
+            margin-top: 15px; padding: 20px; background: #000; border-radius: 10px; 
+            display: none; width: 100%; word-break: break-all; 
+            border: 2px dashed var(--save); color: WHITE; font-size: 14px; 
+        }
 
-        #shareArea { margin-top: 15px; padding: 20px; background: #000; border-radius: 10px; display: none; width: 100%; word-break: break-all; border: 2px dashed var(--nevethon); color: WHITE; font-size: 14px; line-height: 1.6; }
+        .url-display { color: var(--save); font-family: monospace; font-size: 16px; margin-top: 10px; display: block; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div class="brand">NEVETHON @COACH_LIPEE</div>
+    
     <input type="text" id="streamInput" placeholder="NOME DO CANAL">
+    
     <select id="platformSelect">
         <option value="twitch">TWITCH</option>
         <option value="kick">KICK</option>
         <option value="youtube">YOUTUBE</option>
     </select>
+
     <button class="btn-add" onclick="addNewStream()">+ ADICIONAR TELA</button>
-    <button class="btn-share" onclick="generateShareLink()">🔗 GERAR LINK NEVETHON</button>
-    <button onclick="clearAll()" style="background:transparent; color:#666; border:1px solid #333;">LIMPAR TUDO</button>
-    <div id="shareArea"></div>
+    <button class="btn-share" onclick="generateNevethonLink()">🔗 GERAR LINK NEVETHON</button>
+    <button onclick="clearAll()" style="background:transparent; color:#666; border:1px solid #333;">RESET</button>
+    
+    <div id="shareArea">
+        <strong>LINK PERSONALIZADO GERADO:</strong><br>
+        <span id="finalUrl" class="url-display"></span>
+        <br><small>Pressione CTRL+C para copiar se não copiou automaticamente.</small>
+    </div>
 </div>
 
 <div id="grid" class="stream-grid"></div>
 
 <script>
-    const DB_KEY = 'NEVETHON_FINAL_V4';
+    const DB_KEY = 'NEVETHON_V5_STABLE';
     let activeStreams = [];
 
     window.onload = function() {
@@ -110,10 +124,10 @@
         let val = input.value.trim();
         if (!val) return;
 
-        // Se o usuário colou um link, extraímos apenas o nome
+        // Limpeza básica se colarem link
         if (val.includes("twitch.tv/")) val = val.split("twitch.tv/")[1].split("/")[0].split("?")[0];
         if (val.includes("kick.com/")) val = val.split("kick.com/")[1].split("/")[0].split("?")[0];
-        if (val.includes("youtube.com/watch?v=")) val = val.split("v=")[1].split("&")[0];
+        if (val.includes("v=")) val = val.split("v=")[1].split("&")[0];
 
         activeStreams.push({ val: val, type: platform });
         renderStream(val, platform);
@@ -133,27 +147,34 @@
         div.className = 'video-container';
         div.innerHTML = `
             <button class="remove-btn" onclick="removeStream('${channel}', this)">REMOVER</button>
-            <div class="tag">${type.toUpperCase()}: ${channel.toUpperCase()}</div>
             <iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
         `;
         document.getElementById('grid').appendChild(div);
-        return true;
     }
 
-    function generateShareLink() {
+    function generateNevethonLink() {
         if (activeStreams.length === 0) return alert("ADICIONE TELAS PRIMEIRO!");
+        
+        // Pede o nome do apelido para o usuário
+        let alias = prompt("QUAL O NOME DO APELIDO? (EX: NEVETHON-DO-JON)", "NEVETHON-DO-JON");
+        
+        if (alias === null) return; // Cancela se o usuário fechar o prompt
+        
         const encoded = btoa(JSON.stringify(activeStreams));
         
-        // FORÇANDO O NOME NO LINK GERADO
-        const baseUrl = "https://xxtube18.github.io/NEVETHON-DO-JON-multstream";
-        const shareUrl = baseUrl + "?config=" + encoded;
+        // Monta o link começando com o nome do seu site + o apelido
+        const baseUrl = window.location.origin + window.location.pathname;
+        const shareUrl = `${baseUrl}/${alias}?config=${encoded}`;
         
         const area = document.getElementById('shareArea');
-        area.style.display = "block";
-        area.innerHTML = `<strong>LINK DO EVENTO PRONTO:</strong><br><span style="color:var(--accent)">${shareUrl}</span>`;
+        const display = document.getElementById('finalUrl');
         
-        navigator.clipboard.writeText(shareUrl);
-        alert("LINK COPIADO COM SUCESSO!");
+        area.style.display = "block";
+        display.innerText = shareUrl;
+        
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            alert("LINK COM APELIDO '" + alias + "' GERADO E COPIADO!");
+        });
     }
 
     function saveToLocal() { localStorage.setItem(DB_KEY, JSON.stringify(activeStreams)); }
@@ -167,7 +188,7 @@
     function clearAll() {
         if(confirm("LIMPAR TUDO?")) {
             localStorage.removeItem(DB_KEY);
-            location.href = window.location.pathname;
+            location.href = window.location.origin + window.location.pathname;
         }
     }
 </script>
