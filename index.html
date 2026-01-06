@@ -2,22 +2,21 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Multi-Stream Hub Pro</title>
+    <title>Multi-Stream Dashboard PRO</title>
     <style>
-        :root { --bg: #0a0a0c; --panel: #18181b; --accent: #00d1ff; --save: #00ff88; }
+        :root { --bg: #0a0a0c; --panel: #18181b; --accent: #00d1ff; --save: #53fc18; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 15px; }
         
         .header {
             background: var(--panel);
             padding: 15px;
             border-radius: 8px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-            border: 1px solid #333;
+            display: flex; gap: 10px; flex-wrap: wrap;
+            margin-bottom: 20px; border: 1px solid #333;
+            align-items: center;
         }
-        input { flex-grow: 1; padding: 12px; border-radius: 4px; border: 1px solid #444; background: #000; color: white; min-width: 250px; }
+        input { flex-grow: 1; padding: 12px; border-radius: 4px; border: 1px solid #444; background: #000; color: white; min-width: 200px; }
+        select { padding: 12px; border-radius: 4px; background: #222; color: white; border: 1px solid #444; cursor: pointer; }
         
         button { padding: 12px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-add { background: var(--accent); color: #000; }
@@ -30,37 +29,34 @@
             gap: 15px;
         }
         .video-container {
-            position: relative;
-            background: #000;
-            aspect-ratio: 16 / 9;
-            border: 2px solid #2f2f35;
-            border-radius: 6px;
-            overflow: hidden;
+            position: relative; background: #000;
+            aspect-ratio: 16 / 9; border: 2px solid #2f2f35;
+            border-radius: 6px; overflow: hidden;
         }
         iframe { width: 100%; height: 100%; border: none; }
-        .remove-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; border: 1px solid #444; padding: 5px; cursor: pointer; z-index: 10; }
+        .remove-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.8); color: white; border: none; padding: 5px 10px; cursor: pointer; z-index: 10; border-radius: 4px; }
+        .label-tag { position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.6); padding: 2px 8px; font-size: 10px; border-radius: 4px; text-transform: uppercase; }
 
-        #shareLinkDisplay {
-            margin-top: 10px;
-            padding: 10px;
-            background: #222;
-            border-radius: 4px;
-            display: none;
-            width: 100%;
-            word-break: break-all;
-            color: var(--save);
-            font-size: 12px;
+        #shareArea {
+            margin-top: 10px; padding: 10px; background: #222;
+            border-radius: 4px; display: none; width: 100%;
+            word-break: break-all; color: var(--save); font-size: 13px; border: 1px dashed var(--save);
         }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <input type="text" id="streamUrl" placeholder="Cole o link (YouTube, Twitch ou Kick)">
+    <input type="text" id="streamInput" placeholder="Nome do canal ou Link completo">
+    <select id="platformSelect">
+        <option value="twitch">Twitch</option>
+        <option value="kick">Kick</option>
+        <option value="youtube">YouTube</option>
+    </select>
     <button class="btn-add" onclick="addNewStream()">+ Adicionar</button>
-    <button class="btn-share" onclick="generateShareLink()">🔗 Gerar Link para Compartilhar</button>
+    <button class="btn-share" onclick="generateShareLink()">🔗 Gerar Link do Evento</button>
     <button class="btn-clear" onclick="clearAll()">Limpar Tudo</button>
-    <div id="shareLinkDisplay"></div>
+    <div id="shareArea"></div>
 </div>
 
 <div class="stream-grid" id="grid"></div>
@@ -70,100 +66,99 @@
 
     window.onload = function() {
         const urlParams = new URLSearchParams(window.location.search);
-        const sharedData = urlParams.get('config');
-
-        if (sharedData) {
+        const config = urlParams.get('config');
+        if (config) {
             try {
-                // Carrega configuração do link compartilhado
-                const decoded = JSON.parse(atob(sharedData));
-                activeStreams = decoded;
-                activeStreams.forEach(url => renderStream(url));
-            } catch(e) { 
-                console.error("Erro no link compartilhado");
-                loadFromLocal();
-            }
-        } else {
-            loadFromLocal();
-        }
+                activeStreams = JSON.parse(atob(config));
+                activeStreams.forEach(item => renderStream(item.val, item.type));
+            } catch(e) { loadLocal(); }
+        } else { loadLocal(); }
     };
 
-    function loadFromLocal() {
-        activeStreams = JSON.parse(localStorage.getItem('myStreams')) || [];
-        activeStreams.forEach(url => renderStream(url));
+    function loadLocal() {
+        activeStreams = JSON.parse(localStorage.getItem('myStreamsV2')) || [];
+        activeStreams.forEach(item => renderStream(item.val, item.type));
     }
 
     function addNewStream() {
-        const input = document.getElementById('streamUrl');
-        const url = input.value.trim();
-        if (url) {
-            activeStreams.push(url);
-            renderStream(url);
-            saveToLocal();
-            input.value = "";
+        const input = document.getElementById('streamInput');
+        const platform = document.getElementById('platformSelect').value;
+        const val = input.value.trim();
+        
+        if (val) {
+            // Se o usuário colou um link, tentamos identificar a plataforma automaticamente
+            let finalType = platform;
+            if (val.includes("youtube.com") || val.includes("youtu.be")) finalType = "youtube";
+            if (val.includes("twitch.tv")) finalType = "twitch";
+            if (val.includes("kick.com")) finalType = "kick";
+
+            if (renderStream(val, finalType)) {
+                activeStreams.push({ val: val, type: finalType });
+                saveLocal();
+                input.value = "";
+            }
         }
     }
 
-    function renderStream(url) {
+    function renderStream(val, type) {
         let embedUrl = "";
+        let channelName = val;
         const domain = window.location.hostname || "localhost";
 
-        if (url.includes("twitch.tv")) {
-            const channel = url.split('/').filter(Boolean).pop();
-            embedUrl = `https://player.twitch.tv/?channel=${channel}&parent=${domain}`;
-        } else if (url.includes("youtube.com") || url.includes("youtu.be")) {
-            let id = url.includes("v=") ? url.split("v=")[1].split("&")[0] : url.split("/").pop();
-            embedUrl = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1`;
-        } else if (url.includes("kick.com")) {
-            // Correção para o link do Kick
-            const user = url.split('/').filter(Boolean).pop();
-            embedUrl = `https://player.kick.com/${user}`;
+        // Se for um link, extrai apenas o nome/ID para o player
+        if (val.includes("http")) {
+            channelName = val.split('/').filter(Boolean).pop().split(/[?#]/)[0];
+            if (val.includes("v=")) channelName = val.split("v=")[1].split("&")[0];
+        }
+
+        if (type === "twitch") {
+            embedUrl = `https://player.twitch.tv/?channel=${channelName}&parent=${domain}`;
+        } else if (type === "kick") {
+            embedUrl = `https://player.kick.com/${channelName}`;
+        } else if (type === "youtube") {
+            embedUrl = `https://www.youtube-nocookie.com/embed/${channelName}?autoplay=1`;
         }
 
         if (embedUrl) {
             const div = document.createElement('div');
             div.className = 'video-container';
             div.innerHTML = `
-                <button class="remove-btn" onclick="removeStream('${url}', this)">X</button>
-                <iframe src="${embedUrl}" allowfullscreen></iframe>
+                <button class="remove-btn" onclick="removeStream('${val}', this)">Remover</button>
+                <div class="label-tag">${type}: ${channelName}</div>
+                <iframe src="${embedUrl}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
             `;
             document.getElementById('grid').appendChild(div);
-        } else {
-            alert("Link não suportado!");
+            return true;
         }
+        return false;
     }
 
     function generateShareLink() {
-        if (activeStreams.length === 0) return alert("Adicione lives primeiro!");
-        
-        // Codifica a lista de streams para a URL
+        if (activeStreams.length === 0) return alert("Adicione telas primeiro!");
         const encoded = btoa(JSON.stringify(activeStreams));
         const shareUrl = window.location.origin + window.location.pathname + "?config=" + encoded;
-        
-        const display = document.getElementById('shareLinkDisplay');
-        display.style.display = "block";
-        display.innerText = "LINK GERADO (Copie e envie): " + shareUrl;
-        
+        const area = document.getElementById('shareArea');
+        area.style.display = "block";
+        area.innerText = "LINK CONFIGURADO: " + shareUrl;
         navigator.clipboard.writeText(shareUrl);
-        alert("Link de compartilhamento copiado!");
+        alert("Link de evento copiado!");
     }
 
-    function saveToLocal() {
-        localStorage.setItem('myStreams', JSON.stringify(activeStreams));
-    }
+    function saveLocal() { localStorage.setItem('myStreamsV2', JSON.stringify(activeStreams)); }
 
-    function removeStream(url, btn) {
-        activeStreams = activeStreams.filter(u => u !== url);
-        saveToLocal();
+    function removeStream(val, btn) {
+        activeStreams = activeStreams.filter(item => item.val !== val);
+        saveLocal();
         btn.parentElement.remove();
     }
 
     function clearAll() {
-        if(confirm("Remover todas as telas?")) {
+        if(confirm("Limpar tudo?")) {
             activeStreams = [];
-            saveToLocal();
+            saveLocal();
             document.getElementById('grid').innerHTML = "";
-            window.history.pushState({}, document.title, window.location.pathname);
-            document.getElementById('shareLinkDisplay').style.display = "none";
+            window.history.pushState({}, '', window.location.pathname);
+            document.getElementById('shareArea').style.display = "none";
         }
     }
 </script>
