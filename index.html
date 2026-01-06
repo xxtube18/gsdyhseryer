@@ -2,14 +2,15 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>NEVETHON-DO-JON-MULTSTREAM</title>
+    <title>NEVETHON-PUBLIC-MONITOR</title>
     <style>
         :root { 
             --bg: #050505; 
-            --panel: rgba(15, 15, 20, 0.95); 
+            --panel: rgba(15, 15, 20, 0.98); 
             --accent: #00F2FF; 
             --nevethon: #FF4500; 
             --save: #39FF14; 
+            --stats: #FFD700;
         }
 
         body { 
@@ -20,146 +21,110 @@
         }
 
         .header {
-            background: var(--panel);
-            backdrop-filter: blur(15px);
-            padding: 20px; border-radius: 15px;
-            display: flex; gap: 12px; flex-wrap: wrap;
-            margin-bottom: 30px; border: 2px solid var(--nevethon);
-            align-items: center; box-shadow: 0 0 30px rgba(255, 69, 0, 0.3);
+            background: var(--panel); backdrop-filter: blur(15px);
+            padding: 20px; border-radius: 15px; border: 2px solid var(--nevethon);
+            display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+            box-shadow: 0 0 30px rgba(255, 69, 0, 0.3); margin-bottom: 30px;
         }
 
         .brand { font-weight: 900; background: linear-gradient(to right, var(--nevethon), #FFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.6rem; letter-spacing: 2px; }
 
-        input { padding: 12px; border-radius: 8px; border: 1px solid #333; background: rgba(0,0,0,0.8); color: WHITE; outline: none; text-transform: UPPERCASE; font-weight: BOLD; }
+        input, select { padding: 12px; border-radius: 8px; border: 1px solid #333; background: #000; color: WHITE; font-weight: BOLD; outline: none; flex-grow: 1; }
 
-        button { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 900; transition: 0.3s; text-transform: UPPERCASE; }
+        button { padding: 12px 25px; border-radius: 8px; border: none; cursor: pointer; font-weight: 900; transition: 0.3s; text-transform: UPPERCASE; }
         .btn-add { background: var(--accent); color: #000; }
-        .btn-share { background: var(--nevethon); color: #FFF; }
 
-        .stream-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 20px; }
-        .video-container { position: relative; background: #000; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 2px solid #222; }
-        iframe { width: 100%; height: 100%; border: none; }
+        .stream-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 25px; }
+
+        .monitor-card {
+            background: #000; border-radius: 15px; overflow: hidden;
+            border: 2px solid #222; display: flex; flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7); position: relative;
+        }
+
+        .video-box { aspect-ratio: 16 / 9; width: 100%; border-bottom: 2px solid #222; }
         
-        .remove-btn { position: absolute; top: 10px; right: 10px; background: rgba(255, 0, 0, 0.8); color: WHITE; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; z-index: 5; }
+        .label-monitor {
+            background: var(--stats); color: black; padding: 8px;
+            font-size: 11px; font-weight: 900; text-align: center;
+            letter-spacing: 1px;
+        }
 
-        .encurtador-container {
-            margin-top: 40px; padding: 20px; background: rgba(0,0,0,0.8);
-            border: 2px solid var(--save); border-radius: 15px;
-            box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
+        /* ÁREA DE ESTATÍSTICAS PÚBLICAS */
+        .stats-box { 
+            height: 350px; background: #080808; 
+            display: flex; flex-direction: column;
         }
-        .url-box { 
-            background: #000; padding: 15px; border-radius: 8px; 
-            margin-top: 15px; word-break: break-all; color: var(--save); 
-            border: 1px solid var(--save); display: none; font-family: monospace;
-        }
+
+        .stats-box iframe { width: 100%; height: 100%; border: none; }
+
+        .remove-btn { position: absolute; top: 10px; right: 10px; background: #FF0000; color: WHITE; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; z-index: 100; font-weight: 900; }
+
+        iframe { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="brand">NEVETHON @COACH_LIPEE</div>
-    <input type="text" id="streamInput" style="flex-grow: 1;" placeholder="NOME DO CANAL">
-    <button class="btn-add" onclick="addNewStream()">+ ADICIONAR TELA</button>
-    <button class="btn-share" onclick="generateOriginalLink()">🔗 1. GERAR LINK BASE</button>
+    <div class="brand">NEVETHON PUBLIC MONITOR</div>
+    <input type="text" id="streamInput" placeholder="NOME DO FAMOSO (EX: JONVLOGS)">
+    <select id="platformSelect">
+        <option value="twitch">TWITCH</option>
+        <option value="youtube">YOUTUBE</option>
+        <option value="kick">KICK</option>
+    </select>
+    <button class="btn-add" onclick="addNewMonitor()">+ ADICIONAR MONITOR</button>
 </div>
 
 <div id="grid" class="stream-grid"></div>
 
-<div class="encurtador-container">
-    <h3 style="color: var(--save);">2. PERSONALIZAR NOME DO LINK (EVITA ERRO 404)</h3>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <input type="text" id="rawLinkInput" style="flex-grow: 1;" placeholder="COLE O LINK BASE AQUI">
-        <input type="text" id="customName" placeholder="NOME DO EVENTO" value="NEVETHON-DO-JON">
-        <button onclick="createCustomLink()" style="background: var(--save); color: #000;">CRIAR LINK PERSONALIZADO</button>
-    </div>
-    <div id="resultBox" class="url-box"></div>
-</div>
-
 <script>
-    const DB_KEY = 'NEVETHON_FINAL_V8';
-    let activeStreams = [];
+    function addNewMonitor() {
+        const stream = document.getElementById('streamInput').value.trim();
+        const platform = document.getElementById('platformSelect').value;
 
-    window.onload = function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const config = urlParams.get('config');
-        if (config) {
-            try {
-                activeStreams = JSON.parse(atob(config));
-                saveToLocal(); 
-                activeStreams.forEach(item => renderStream(item.val, item.type));
-            } catch(e) { loadFromLocal(); }
-        } else { loadFromLocal(); }
-    };
+        if (!stream) return alert("DIGITE O NOME DO CANAL!");
 
-    function loadFromLocal() {
-        const stored = localStorage.getItem(DB_KEY);
-        if (stored) {
-            activeStreams = JSON.parse(stored);
-            activeStreams.forEach(item => renderStream(item.val, item.type));
-        }
+        renderMonitor(stream, platform);
+        document.getElementById('streamInput').value = "";
     }
 
-    function addNewStream() {
-        const input = document.getElementById('streamInput');
-        let val = input.value.trim();
-        if (!val) return;
-        
-        let type = "twitch"; // Padrão
-        if (val.includes("youtube.com") || val.includes("youtu.be")) type = "youtube";
-        if (val.includes("kick.com")) type = "kick";
-
-        if (val.includes("/")) val = val.split('/').filter(Boolean).pop().split('?')[0].split("v=").pop();
-
-        activeStreams.push({ val: val, type: type });
-        renderStream(val, type);
-        saveToLocal();
-        input.value = "";
-    }
-
-    function renderStream(channel, type) {
+    function renderMonitor(channel, type) {
         const domain = window.location.hostname || "localhost";
-        let url = "";
-        if (type === "twitch") url = `https://player.twitch.tv/?channel=${channel}&parent=${domain}`;
-        else if (type === "kick") url = `https://player.kick.com/${channel}`;
-        else if (type === "youtube") url = `https://www.youtube-nocookie.com/embed/${channel}?autoplay=1`;
+        let videoUrl = "";
+        let statsUrl = "";
 
-        const div = document.createElement('div');
-        div.className = 'video-container';
-        div.innerHTML = `<button class="remove-btn" onclick="removeStream('${channel}', this)">REMOVER</button><iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
-        document.getElementById('grid').appendChild(div);
+        // Lógica de Vídeo
+        if (type === "twitch") videoUrl = `https://player.twitch.tv/?channel=${channel}&parent=${domain}`;
+        else if (type === "kick") videoUrl = `https://player.kick.com/${channel}`;
+        else if (type === "youtube") videoUrl = `https://www.youtube-nocookie.com/embed/${channel}?autoplay=1`;
+
+        // Lógica de Estatísticas Públicas (Usando links de rastreio público)
+        if (type === "youtube") {
+            statsUrl = `https://socialblade.com/youtube/user/${channel}/realtime`;
+        } else if (type === "twitch") {
+            statsUrl = `https://socialblade.com/twitch/user/${channel}/realtime`;
+        } else {
+            // Para o Kick, como é novo, abrimos o perfil direto para monitorar o chat/seguidores
+            statsUrl = `https://kick.com/${channel}/chatroom`;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'monitor-card';
+        
+        card.innerHTML = `
+            <button class="remove-btn" onclick="this.parentElement.remove()">X</button>
+            <div class="video-box">
+                <iframe src="${videoUrl}" allowfullscreen></iframe>
+            </div>
+            <div class="label-monitor">MONITORANDO PÚBLICO: ${channel} (INSCRITOS/VIEWS EM TEMPO REAL)</div>
+            <div class="stats-box">
+                <iframe src="${statsUrl}"></iframe>
+            </div>
+        `;
+
+        document.getElementById('grid').appendChild(card);
     }
-
-    function generateOriginalLink() {
-        if (activeStreams.length === 0) return alert("ADICIONE TELAS!");
-        const encoded = btoa(JSON.stringify(activeStreams));
-        const shareUrl = window.location.origin + window.location.pathname + "?config=" + encoded;
-        document.getElementById('rawLinkInput').value = shareUrl;
-        alert("LINK BASE GERADO! AGORA CLIQUE NO BOTÃO VERDE ABAIXO.");
-    }
-
-    function createCustomLink() {
-        const raw = document.getElementById('rawLinkInput').value;
-        const name = document.getElementById('customName').value.trim().toUpperCase();
-        
-        if (!raw || !name) return alert("COLE O LINK BASE PRIMEIRO!");
-
-        // Pega a parte da configuração
-        const configPart = raw.split('?')[1] || "";
-        
-        // MONTAGEM SEGURA: Arquivo real + Nome do Evento + Configuração
-        // Isso impede o erro 404 do GitHub
-        const finalUrl = `${window.location.origin}${window.location.pathname}?${name}&${configPart}`;
-        
-        const box = document.getElementById('resultBox');
-        box.style.display = "block";
-        box.innerHTML = `<strong>LINK PRONTO PARA DIVULGAR (SEM ERRO 404):</strong><br><br>${finalUrl}`;
-        
-        navigator.clipboard.writeText(finalUrl);
-        alert("LINK COPIADO COM SUCESSO!");
-    }
-
-    function saveToLocal() { localStorage.setItem(DB_KEY, JSON.stringify(activeStreams)); }
-    function removeStream(val, btn) { activeStreams = activeStreams.filter(i => i.val !== val); saveToLocal(); btn.parentElement.remove(); }
 </script>
 </body>
 </html>
