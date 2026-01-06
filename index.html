@@ -2,12 +2,12 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>NEVETHON - MONITOR OFICIAL</title>
+    <title>NEVETHON MONITOR - FIX</title>
     <style>
         :root { --bg: #050505; --nevethon: #FF4500; --accent: #00F2FF; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; text-transform: uppercase; }
         
-        .header { background: rgba(15,15,20,0.98); padding: 20px; border-radius: 15px; border: 2px solid var(--nevethon); display: flex; gap: 10px; margin-bottom: 25px; align-items: center; flex-wrap: wrap; }
+        .header { background: rgba(15,15,20,0.98); padding: 20px; border-radius: 15px; border: 2px solid var(--nevethon); display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
         input, select { padding: 12px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; font-weight: bold; outline: none; }
         input { flex-grow: 1; }
         
@@ -22,30 +22,26 @@
         .badge { background: rgba(0,0,0,0.85); padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--nevethon); backdrop-filter: blur(10px); }
         .val { font-size: 1.5rem; font-weight: 900; color: var(--accent); font-family: monospace; }
         
-        .video-container { width: 100%; aspect-ratio: 16/9; background: #000; }
-        iframe { width: 100%; height: 100%; border: none; }
+        .video-container { width: 100%; aspect-ratio: 16/9; background: #111; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; }
 
         .sync-bar { background: #111; padding: 10px; display: flex; gap: 10px; align-items: center; border-top: 1px solid #222; }
         .sync-input { width: 110px; font-size: 12px; padding: 5px; }
-        
-        #shareArea { margin-top: 20px; padding: 15px; border: 2px dashed var(--accent); color: var(--accent); display: none; word-break: break-all; border-radius: 10px; background: rgba(0,242,255,0.05); }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div style="font-weight:900; color:var(--nevethon); margin-right:10px;">NEVETHON PRO</div>
     <select id="platSelect">
         <option value="kick">KICK</option>
         <option value="twitch">TWITCH</option>
         <option value="youtube">YOUTUBE</option>
     </select>
-    <input type="text" id="nameInput" placeholder="NOME DO STREAMER (EX: JONVLOGS)">
+    <input type="text" id="nameInput" placeholder="NOME DO CANAL (EX: JONVLOGS)">
     <button class="btn btn-add" onclick="addByName()">ADICIONAR</button>
     <button class="btn btn-link" onclick="generateLink()">🔗 GERAR LINK</button>
 </div>
 
-<div id="shareArea"></div>
 <div id="grid" class="monitor-grid"></div>
 
 <script>
@@ -58,10 +54,16 @@
         
         let id = name.toLowerCase();
         let embedUrl = "";
+        const host = window.location.hostname;
 
-        if(plat === 'kick') embedUrl = `https://player.kick.com/${id}`;
-        else if(plat === 'twitch') embedUrl = `https://player.twitch.tv/?channel=${id}&parent=${window.location.hostname}`;
-        else if(plat === 'youtube') embedUrl = `https://www.youtube.com/embed/live_stream?channel=${id}`;
+        if(plat === 'kick') {
+            embedUrl = `https://player.kick.com/${id}?muted=false&autoplay=true`;
+        } else if(plat === 'twitch') {
+            embedUrl = `https://player.twitch.tv/?channel=${id}&parent=${host}&parent=www.google.com`;
+        } else if(plat === 'youtube') {
+            // O YouTube exige ID do vídeo para embeds, tentamos o modo live_stream
+            embedUrl = `https://www.youtube.com/embed/live_stream?channel=${id}&autoplay=1&mute=0`;
+        }
 
         const streamObj = { id, embedUrl, viewers: 0, plat };
         activeStreams.push(streamObj);
@@ -79,10 +81,12 @@
                     <span class="val" id="viewers-${obj.id}">0</span>
                 </div>
             </div>
-            <div class="video-container"><iframe src="${obj.embedUrl}" allowfullscreen></iframe></div>
+            <div class="video-container">
+                <iframe src="${obj.embedUrl}" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            </div>
             <div class="sync-bar">
                 <span style="font-size: 10px;">PÚBLICO REAL:</span>
-                <input type="number" class="sync-input" id="input-${obj.id}" placeholder="EX: 12705">
+                <input type="number" class="sync-input" id="input-${obj.id}" placeholder="DIGITE O VALOR">
                 <button class="btn" style="background:var(--accent); color:000; padding:5px 10px; font-size:10px;" onclick="syncValue('${obj.id}')">OK</button>
                 <button class="btn" style="background:red; color:white; padding:5px 10px; font-size:10px; margin-left:auto;" onclick="this.parentElement.parentElement.remove()">REMOVER</button>
             </div>
@@ -95,7 +99,10 @@
         const val = document.getElementById(`input-${id}`).value;
         if(val) {
             const stream = activeStreams.find(s => s.id === id);
-            if(stream) stream.viewers = parseInt(val);
+            if(stream) {
+                stream.viewers = parseInt(val);
+                document.getElementById(`viewers-${id}`).innerText = stream.viewers.toLocaleString('pt-BR');
+            }
         }
     }
 
@@ -104,22 +111,16 @@
             const stream = activeStreams.find(s => s.id === id);
             const display = document.getElementById(`viewers-${id}`);
             if(stream && display && stream.viewers > 0) {
-                stream.viewers += Math.floor(Math.random() * 7) - 3;
+                stream.viewers += Math.floor(Math.random() * 9) - 4;
                 display.innerText = stream.viewers.toLocaleString('pt-BR');
             }
-        }, 800);
+        }, 600);
     }
 
     function generateLink() {
-        if(activeStreams.length === 0) return;
         const config = btoa(JSON.stringify(activeStreams));
-        // CORREÇÃO DO ERRO 404: O link agora usa index.html explicitamente
         const finalUrl = `${window.location.origin}${window.location.pathname}?config=${config}`;
-        const area = document.getElementById('shareArea');
-        area.style.display = "block";
-        area.innerHTML = `<strong>LINK DO PAINEL:</strong><br>${finalUrl}`;
-        navigator.clipboard.writeText(finalUrl);
-        alert("Link copiado! Use este link para não dar erro 404.");
+        prompt("COPIE SEU LINK DE MONITORAMENTO:", finalUrl);
     }
 
     window.onload = () => {
@@ -129,7 +130,7 @@
             try {
                 activeStreams = JSON.parse(atob(config));
                 activeStreams.forEach(renderCard);
-            } catch(e) {}
+            } catch(e) { console.error("Erro ao carregar lives salvas."); }
         }
     }
 </script>
