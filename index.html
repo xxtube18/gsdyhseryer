@@ -2,155 +2,136 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>NEVETHON-LIVE-MONITOR</title>
+    <title>NEVETHON-DASHBOARD-CLEAN</title>
     <style>
         :root { 
             --bg: #050505; 
             --nevethon: #FF4500; 
             --accent: #00F2FF; 
-            --save: #39FF14; 
+            --card-bg: #111;
         }
 
         body { 
-            font-family: 'Poppins', sans-serif; background: #050505; color: WHITE; 
+            font-family: 'Poppins', sans-serif; background: var(--bg); color: WHITE; 
             margin: 0; padding: 20px; text-transform: UPPERCASE;
         }
 
         .header {
             background: rgba(20,20,25,0.95); padding: 20px; border-radius: 15px;
             border: 2px solid var(--nevethon); display: flex; gap: 10px; flex-wrap: wrap;
-            margin-bottom: 20px; box-shadow: 0 0 25px rgba(255, 69, 0, 0.3);
+            margin-bottom: 30px; align-items: center;
         }
 
-        input, select { padding: 12px; border-radius: 8px; border: 1px solid #333; background: #000; color: WHITE; font-weight: BOLD; flex-grow: 1; }
+        input { padding: 12px; border-radius: 8px; border: 1px solid #333; background: #000; color: WHITE; font-weight: BOLD; flex-grow: 1; }
         
-        button { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 900; text-transform: UPPERCASE; }
+        button { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 900; text-transform: UPPERCASE; transition: 0.3s; }
         .btn-add { background: var(--accent); color: #000; }
-        .btn-link { background: var(--nevethon); color: #FFF; }
+        .btn-share { background: var(--nevethon); color: #FFF; }
 
-        .monitor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 20px; }
+        .monitor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 25px; }
         
-        .card { background: #000; border: 2px solid #222; border-radius: 15px; overflow: hidden; position: relative; transition: 0.3s; }
-        .card:hover { border-color: var(--nevethon); }
+        .stream-card { background: #000; border: 2px solid #222; border-radius: 20px; overflow: hidden; position: relative; }
 
-        .video-box { aspect-ratio: 16/9; width: 100%; background: #000; }
+        .video-box { aspect-ratio: 16/9; width: 100%; background: #000; border-bottom: 2px solid #222; }
         
-        .stats-header { 
-            background: linear-gradient(90deg, var(--nevethon), #000); 
-            color: #FFF; padding: 8px; font-size: 12px; font-weight: 900; 
-            display: flex; justify-content: space-between; align-items: center;
+        /* CARTÕES DE NÚMEROS */
+        .stats-container { display: flex; padding: 15px; gap: 10px; background: #0a0a0a; }
+        
+        .stat-card { 
+            flex: 1; background: var(--card-bg); padding: 15px; border-radius: 12px; 
+            text-align: center; border: 1px solid #333;
         }
 
-        .live-indicator { width: 10px; height: 10px; background: #ff0000; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .stat-value { font-size: 1.8rem; font-weight: 900; color: var(--accent); display: block; }
+        .stat-label { font-size: 0.7rem; color: #888; letter-spacing: 1px; }
 
-        .stats-content { height: 250px; background: #080808; border-top: 1px solid #222; }
-        
+        .remove-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,0,0,0.8); color: white; border: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; z-index: 10; }
+
         iframe { width: 100%; height: 100%; border: none; }
-        .remove { position: absolute; top: 10px; right: 10px; background: rgba(255,0,0,0.8); color: white; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; z-index: 20; font-weight: 900; }
-
-        #shareArea { margin-top: 20px; padding: 20px; border: 2px dashed var(--save); background: rgba(0,0,0,0.5); color: var(--save); display: none; word-break: break-all; border-radius: 10px; }
+        #shareArea { margin-top: 20px; padding: 15px; border: 2px dashed var(--accent); color: var(--accent); display: none; word-break: break-all; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div style="font-weight:900; color:var(--nevethon); font-size: 1.4rem;">NEVETHON MONITOR</div>
-    <input type="text" id="streamLink" placeholder="COLE O LINK DA LIVE AQUI (YOUTUBE, TWITCH OU KICK)">
-    <button class="btn-add" onclick="addMonitor()">+ MONITORAR LIVE</button>
-    <button class="btn-link" onclick="generateLink()">🔗 GERAR MULTI-LINK</button>
+    <div style="font-weight:900; color:var(--nevethon); font-size: 1.4rem; margin-right: 15px;">NEVETHON PRO</div>
+    <input type="text" id="linkInput" placeholder="COLE O LINK DA LIVE AQUI">
+    <button class="btn-add" onclick="addStream()">+ ADICIONAR LIVE</button>
+    <button class="btn-share" onclick="generateLink()">🔗 GERAR LINK</button>
 </div>
 
 <div id="grid" class="monitor-grid"></div>
 <div id="shareArea"></div>
 
 <script>
-    let activeMonitors = [];
+    let streams = [];
 
-    function addMonitor() {
-        const link = document.getElementById('streamLink').value.trim();
-        if(!link) return alert("COLE UM LINK VÁLIDO!");
+    function addStream() {
+        const link = document.getElementById('linkInput').value.trim();
+        if(!link) return;
 
-        let plat = "";
-        let id = "";
+        let plat = "twitch";
+        let id = "LIVE";
 
         if(link.includes("twitch.tv")) {
+            id = link.split('/').filter(Boolean).pop().split('?')[0];
             plat = "twitch";
-            id = link.split('/').filter(Boolean).pop().split('?')[0];
         } else if(link.includes("youtube.com") || link.includes("youtu.be")) {
-            plat = "youtube";
             id = link.includes("v=") ? link.split('v=')[1].split('&')[0] : link.split('/').pop();
+            plat = "youtube";
         } else if(link.includes("kick.com")) {
-            plat = "kick";
             id = link.split('/').filter(Boolean).pop().split('?')[0];
-        } else {
-            return alert("PLATAFORMA NÃO RECONHECIDA!");
+            plat = "kick";
         }
 
-        activeMonitors.push({id, plat});
-        render(id, plat);
-        document.getElementById('streamLink').value = "";
+        streams.push({id, plat});
+        renderStream(id, plat);
+        document.getElementById('linkInput').value = "";
     }
 
-    function render(id, plat) {
+    function renderStream(id, plat) {
         const domain = window.location.hostname || "localhost";
         let vUrl = ""; 
-        let sUrl = "";
 
-        if(plat === "twitch") {
-            vUrl = `https://player.twitch.tv/?channel=${id}&parent=${domain}`;
-            // Tracker de audiência da Live específica
-            sUrl = `https://twitchtracker.com/${id}/sub-count`; 
-        } else if(plat === "youtube") {
-            vUrl = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1`;
-            // Estatísticas da transmissão específica
-            sUrl = `https://www.viewstats.com/@${id}/live`; 
-        } else if(plat === "kick") {
-            vUrl = `https://player.kick.com/${id}`;
-            sUrl = `https://kick.com/${id}/chatroom`;
-        }
+        if(plat === "twitch") vUrl = `https://player.twitch.tv/?channel=${id}&parent=${domain}`;
+        else if(plat === "youtube") vUrl = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1`;
+        else if(plat === "kick") vUrl = `https://player.kick.com/${id}`;
 
         const div = document.createElement('div');
-        div.className = 'card';
+        div.className = 'stream-card';
         div.innerHTML = `
-            <button class="remove" onclick="removeMonitor('${id}', this)">REMOVER</button>
+            <button class="remove-btn" onclick="this.parentElement.remove()">REMOVER</button>
             <div class="video-box"><iframe src="${vUrl}" allowfullscreen></iframe></div>
-            <div class="stats-header">
-                <span><span class="live-indicator"></span>DADOS DA LIVE: ${id}</span>
-                <span style="color:var(--accent)">AO VIVO</span>
-            </div>
-            <div class="stats-content">
-                <iframe src="${sUrl}"></iframe>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <span class="stat-label">ASSISTINDO AGORA</span>
+                    <span class="stat-value" contenteditable="true">--</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">TOTAL DE SUBS</span>
+                    <span class="stat-value" contenteditable="true">--</span>
+                </div>
             </div>
         `;
         document.getElementById('grid').appendChild(div);
     }
 
-    function removeMonitor(id, btn) {
-        activeMonitors = activeMonitors.filter(m => m.id !== id);
-        btn.parentElement.remove();
-    }
-
     function generateLink() {
-        if(activeMonitors.length === 0) return alert("ADICIONE UMA LIVE!");
-        const config = btoa(JSON.stringify(activeMonitors));
-        const finalUrl = `${window.location.origin}${window.location.pathname}?NEVETHON-MONITOR&config=${config}`;
-        
-        const area = document.getElementById('shareArea');
-        area.style.display = "block";
-        area.innerHTML = `<strong>LINK DO PAINEL DE MONITORAMENTO:</strong><br><br>${finalUrl}`;
-        navigator.clipboard.writeText(finalUrl);
-        alert("LINK COPIADO!");
+        if(streams.length === 0) return alert("ADICIONE UMA LIVE!");
+        const config = btoa(JSON.stringify(streams));
+        const url = `${window.location.origin}${window.location.pathname}?NEVETHON&config=${config}`;
+        document.getElementById('shareArea').style.display = "block";
+        document.getElementById('shareArea').innerHTML = `<strong>LINK PRONTO:</strong><br>${url}`;
+        navigator.clipboard.writeText(url);
+        alert("LINK COPIADO COM SUCESSO!");
     }
 
     window.onload = () => {
         const params = new URLSearchParams(window.location.search);
         const config = params.get('config');
         if(config) {
-            try {
-                activeMonitors = JSON.parse(atob(config));
-                activeMonitors.forEach(m => render(m.id, m.plat));
-            } catch(e) { console.error("Erro ao carregar config"); }
+            streams = JSON.parse(atob(config));
+            streams.forEach(s => renderStream(s.id, s.plat));
         }
     };
 </script>
