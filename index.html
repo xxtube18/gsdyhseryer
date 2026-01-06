@@ -8,7 +8,6 @@
         :root { --bg: #050505; --nv: #FF4500; --ac: #00F2FF; }
         body { font-family: sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 15px; text-transform: uppercase; overflow-x: hidden; }
         
-        /* BARRA DE CONTROLE */
         .nav { background: #111; padding: 15px; border-radius: 12px; border: 1px solid var(--nv); display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
         input, select { background: #000; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 5px; outline: none; }
         input { flex-grow: 1; }
@@ -17,11 +16,9 @@
         .btn-add { background: var(--ac); color: #000; }
         .btn-link { background: var(--nv); color: #fff; }
 
-        /* GRADE */
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px; }
-        .card { background: #000; border: 1px solid #222; border-radius: 15px; overflow: hidden; position: relative; }
+        .card { background: #000; border: 1px solid #222; border-radius: 15px; overflow: hidden; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        /* OVERLAY DOS VIEWERS */
         .overlay { position: absolute; top: 15px; left: 15px; z-index: 10; pointer-events: none; }
         .badge { background: rgba(0,0,0,0.85); padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--nv); margin-bottom: 8px; backdrop-filter: blur(5px); }
         .num { font-size: 1.8rem; font-weight: 900; color: var(--ac); display: block; font-family: monospace; }
@@ -35,6 +32,7 @@
 <body>
 
 <div class="nav">
+    <div style="font-weight:900; color:var(--nv); margin-right:10px;">NEVETHON PRO</div>
     <select id="p" style="width: 100px;">
         <option value="k">KICK</option>
         <option value="t">TWITCH</option>
@@ -42,6 +40,7 @@
     </select>
     <input type="text" id="n" placeholder="NOME DO CANAL (EX: JONVLOGS)">
     <button class="btn btn-add" onclick="add()">ADICIONAR</button>
+    <button class="btn btn-link" onclick="share()">🔗 COMPARTILHAR</button>
 </div>
 
 <div id="grid" class="grid"></div>
@@ -65,6 +64,7 @@
         const obj = { id, url, v: 0 };
         list.push(obj);
         render(obj);
+        document.getElementById('n').value = "";
     }
 
     function render(obj) {
@@ -73,7 +73,7 @@
         div.innerHTML = `
             <div class="overlay">
                 <div class="badge">
-                    <span style="font-size:10px; color:#aaa;">AO VIVO</span>
+                    <span style="font-size:10px; color:#aaa;">🔴 AO VIVO</span>
                     <span class="num" id="v-${obj.id}">0</span>
                 </div>
             </div>
@@ -89,16 +89,34 @@
         setInterval(() => {
             const item = list.find(x => x.id === obj.id);
             if(item && item.v > 0) {
-                item.v += Math.floor(Math.random() * 5) - 2;
+                item.v += Math.floor(Math.random() * 7) - 3;
                 document.getElementById(`v-${obj.id}`).innerText = item.v.toLocaleString('pt-BR');
             }
-        }, 800);
+        }, 700);
     }
 
     function sync(id) {
         const val = document.getElementById(`iv-${id}`).value;
         const item = list.find(x => x.id === id);
         if(item && val) item.v = parseInt(val);
+    }
+
+    function share() {
+        if(list.length === 0) return;
+        const config = btoa(JSON.stringify(list));
+        const finalUrl = window.location.origin + window.location.pathname + "?config=" + config;
+        prompt("COPIE SEU LINK:", finalUrl);
+    }
+
+    window.onload = () => {
+        const params = new URLSearchParams(window.location.search);
+        const config = params.get('config');
+        if(config) {
+            try {
+                list = JSON.parse(atob(config));
+                list.forEach(render);
+            } catch(e) { console.error("Erro ao carregar link."); }
+        }
     }
 </script>
 </body>
