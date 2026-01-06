@@ -2,135 +2,127 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>NEVETHON MONITOR - FIX</title>
+    <title>NEVETHON DASHBOARD PRO</title>
     <style>
-        :root { --bg: #050505; --nevethon: #FF4500; --accent: #00F2FF; }
-        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; text-transform: uppercase; }
+        :root { --bg: #050505; --nv: #FF4500; --ac: #00F2FF; }
+        body { font-family: sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 15px; text-transform: uppercase; }
         
-        .header { background: rgba(15,15,20,0.98); padding: 20px; border-radius: 15px; border: 2px solid var(--nevethon); display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
-        input, select { padding: 12px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; font-weight: bold; outline: none; }
-        input { flex-grow: 1; }
+        .nav { background: #111; padding: 15px; border-radius: 12px; border: 1px solid var(--nv); display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+        input, select { background: #000; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 5px; outline: none; }
         
-        .btn { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 900; text-transform: uppercase; transition: 0.3s; }
-        .btn-add { background: var(--accent); color: #000; }
-        .btn-link { background: var(--nevethon); color: #fff; }
+        .btn { cursor: pointer; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; text-transform: uppercase; }
+        .btn-add { background: var(--ac); color: #000; }
+        .btn-link { background: var(--nv); color: #fff; margin-left: auto; }
 
-        .monitor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 20px; }
-        .card { position: relative; background: #000; border: 2px solid #222; border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 15px; }
+        .card { background: #000; border: 1px solid #222; border-radius: 10px; overflow: hidden; position: relative; }
         
-        .overlay { position: absolute; top: 15px; left: 15px; display: flex; gap: 10px; z-index: 100; pointer-events: none; }
-        .badge { background: rgba(0,0,0,0.85); padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--nevethon); backdrop-filter: blur(10px); }
-        .val { font-size: 1.5rem; font-weight: 900; color: var(--accent); font-family: monospace; }
+        /* OVERLAY DOS NÚMEROS */
+        .stats { position: absolute; top: 10px; left: 10px; z-index: 10; pointer-events: none; }
+        .badge { background: rgba(0,0,0,0.9); padding: 8px 12px; border-radius: 5px; border-left: 3px solid var(--nv); margin-bottom: 5px; }
+        .num { font-size: 1.4rem; font-weight: 900; color: var(--ac); display: block; font-family: monospace; }
         
-        .video-container { width: 100%; aspect-ratio: 16/9; background: #111; position: relative; }
-        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; }
+        .video { width: 100%; aspect-ratio: 16/9; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; }
 
-        .sync-bar { background: #111; padding: 10px; display: flex; gap: 10px; align-items: center; border-top: 1px solid #222; }
-        .sync-input { width: 110px; font-size: 12px; padding: 5px; }
+        .controls { background: #0a0a0a; padding: 10px; display: flex; gap: 10px; align-items: center; border-top: 1px solid #222; }
+        .sync-in { width: 90px; padding: 5px; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <select id="platSelect">
-        <option value="kick">KICK</option>
-        <option value="twitch">TWITCH</option>
-        <option value="youtube">YOUTUBE</option>
+<div class="nav">
+    <select id="p">
+        <option value="k">KICK</option>
+        <option value="t">TWITCH</option>
+        <option value="y">YOUTUBE</option>
     </select>
-    <input type="text" id="nameInput" placeholder="NOME DO CANAL (EX: JONVLOGS)">
-    <button class="btn btn-add" onclick="addByName()">ADICIONAR</button>
-    <button class="btn btn-link" onclick="generateLink()">🔗 GERAR LINK</button>
+    <input type="text" id="n" placeholder="NOME DO CANAL (EX: JONVLOGS)">
+    <button class="btn btn-add" onclick="add()">ADICIONAR</button>
+    <button class="btn btn-link" onclick="share()">🔗 GERAR LINK</button>
 </div>
 
-<div id="grid" class="monitor-grid"></div>
+<div id="grid" class="grid"></div>
 
 <script>
-    let activeStreams = [];
+    let list = [];
 
-    function addByName() {
-        const name = document.getElementById('nameInput').value.trim();
-        const plat = document.getElementById('platSelect').value;
+    function add() {
+        const name = document.getElementById('n').value.trim();
+        const plat = document.getElementById('p').value;
         if(!name) return;
         
         let id = name.toLowerCase();
-        let embedUrl = "";
+        let url = "";
         const host = window.location.hostname;
 
-        if(plat === 'kick') {
-            embedUrl = `https://player.kick.com/${id}?muted=false&autoplay=true`;
-        } else if(plat === 'twitch') {
-            embedUrl = `https://player.twitch.tv/?channel=${id}&parent=${host}&parent=www.google.com`;
-        } else if(plat === 'youtube') {
-            // O YouTube exige ID do vídeo para embeds, tentamos o modo live_stream
-            embedUrl = `https://www.youtube.com/embed/live_stream?channel=${id}&autoplay=1&mute=0`;
-        }
+        if(plat === 'k') url = `https://player.kick.com/${id}`;
+        if(plat === 't') url = `https://player.twitch.tv/?channel=${id}&parent=${host}`;
+        if(plat === 'y') url = `https://www.youtube.com/embed/live_stream?channel=${id}`;
 
-        const streamObj = { id, embedUrl, viewers: 0, plat };
-        activeStreams.push(streamObj);
-        renderCard(streamObj);
-        document.getElementById('nameInput').value = "";
+        const obj = { id, url, v: 0, s: 0 };
+        list.push(obj);
+        render(obj);
+        document.getElementById('n').value = "";
     }
 
-    function renderCard(obj) {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <div class="overlay">
+    function render(obj) {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+            <div class="stats">
                 <div class="badge">
-                    <span style="font-size:0.6rem; display:block; color:#aaa;">🔴 AO VIVO: ${obj.id}</span>
-                    <span class="val" id="viewers-${obj.id}">0</span>
+                    <span style="font-size:10px;color:#888;">AO VIVO</span>
+                    <span class="num" id="v-${obj.id}">0</span>
+                </div>
+                <div class="badge" style="border-left-color:var(--ac)">
+                    <span style="font-size:10px;color:#888;">SUBS</span>
+                    <span class="num" id="s-${obj.id}">0</span>
                 </div>
             </div>
-            <div class="video-container">
-                <iframe src="${obj.embedUrl}" allow="autoplay; fullscreen" allowfullscreen></iframe>
-            </div>
-            <div class="sync-bar">
-                <span style="font-size: 10px;">PÚBLICO REAL:</span>
-                <input type="number" class="sync-input" id="input-${obj.id}" placeholder="DIGITE O VALOR">
-                <button class="btn" style="background:var(--accent); color:000; padding:5px 10px; font-size:10px;" onclick="syncValue('${obj.id}')">OK</button>
-                <button class="btn" style="background:red; color:white; padding:5px 10px; font-size:10px; margin-left:auto;" onclick="this.parentElement.parentElement.remove()">REMOVER</button>
+            <div class="video"><iframe src="${obj.url}" allowfullscreen></iframe></div>
+            <div class="controls">
+                <input type="number" class="sync-in" id="iv-${obj.id}" placeholder="VIEWERS">
+                <input type="number" class="sync-in" id="is-${obj.id}" placeholder="SUBS">
+                <button class="btn" style="background:var(--ac);padding:5px;font-size:10px;" onclick="sync('${obj.id}')">OK</button>
+                <button class="btn" style="background:red;color:#fff;padding:5px;font-size:10px;margin-left:auto;" onclick="this.parentElement.parentElement.remove()">REMOVER</button>
             </div>
         `;
-        document.getElementById('grid').appendChild(card);
-        startLiveUpdate(obj.id);
+        document.getElementById('grid').appendChild(div);
+        
+        // Loop de animação milisegundos
+        setInterval(() => {
+            const item = list.find(x => x.id === obj.id);
+            if(item && item.v > 0) {
+                item.v += Math.floor(Math.random() * 5) - 2;
+                document.getElementById(`v-${obj.id}`).innerText = item.v.toLocaleString('pt-BR');
+                document.getElementById(`s-${obj.id}`).innerText = item.s.toLocaleString('pt-BR');
+            }
+        }, 700);
     }
 
-    function syncValue(id) {
-        const val = document.getElementById(`input-${id}`).value;
-        if(val) {
-            const stream = activeStreams.find(s => s.id === id);
-            if(stream) {
-                stream.viewers = parseInt(val);
-                document.getElementById(`viewers-${id}`).innerText = stream.viewers.toLocaleString('pt-BR');
-            }
+    function sync(id) {
+        const v = document.getElementById(`iv-${id}`).value;
+        const s = document.getElementById(`is-${id}`).value;
+        const item = list.find(x => x.id === id);
+        if(item) {
+            if(v) item.v = parseInt(v);
+            if(s) item.s = parseInt(s);
         }
     }
 
-    function startLiveUpdate(id) {
-        setInterval(() => {
-            const stream = activeStreams.find(s => s.id === id);
-            const display = document.getElementById(`viewers-${id}`);
-            if(stream && display && stream.viewers > 0) {
-                stream.viewers += Math.floor(Math.random() * 9) - 4;
-                display.innerText = stream.viewers.toLocaleString('pt-BR');
-            }
-        }, 600);
-    }
-
-    function generateLink() {
-        const config = btoa(JSON.stringify(activeStreams));
-        const finalUrl = `${window.location.origin}${window.location.pathname}?config=${config}`;
-        prompt("COPIE SEU LINK DE MONITORAMENTO:", finalUrl);
+    function share() {
+        const config = btoa(JSON.stringify(list));
+        const finalUrl = window.location.href.split('?')[0] + "?config=" + config;
+        prompt("LINK DO EVENTO PRONTO:", finalUrl);
     }
 
     window.onload = () => {
-        const params = new URLSearchParams(window.location.search);
-        const config = params.get('config');
-        if(config) {
-            try {
-                activeStreams = JSON.parse(atob(config));
-                activeStreams.forEach(renderCard);
-            } catch(e) { console.error("Erro ao carregar lives salvas."); }
+        const p = new URLSearchParams(window.location.search);
+        const c = p.get('config');
+        if(c) {
+            list = JSON.parse(atob(c));
+            list.forEach(render);
         }
     }
 </script>
