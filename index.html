@@ -7,26 +7,40 @@
     <style>
         :root { --bg: #050505; --nv: #FF4500; --ac: #00F2FF; }
         body { font-family: sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 15px; text-transform: uppercase; overflow-x: hidden; }
+        
+        /* BARRA DE CONTROLE */
         .nav { background: #111; padding: 15px; border-radius: 12px; border: 1px solid var(--nv); display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
-        input, select { background: #000; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 5px; outline: none; flex-grow: 1; }
-        .btn { cursor: pointer; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; text-transform: uppercase; }
+        input, select { background: #000; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 5px; outline: none; }
+        input { flex-grow: 1; }
+        
+        .btn { cursor: pointer; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
         .btn-add { background: var(--ac); color: #000; }
+        .btn-link { background: var(--nv); color: #fff; }
+
+        /* GRADE */
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px; }
         .card { background: #000; border: 1px solid #222; border-radius: 15px; overflow: hidden; position: relative; }
+        
+        /* OVERLAY DOS VIEWERS */
         .overlay { position: absolute; top: 15px; left: 15px; z-index: 10; pointer-events: none; }
-        .badge { background: rgba(0,0,0,0.85); padding: 10px; border-radius: 8px; border-left: 4px solid var(--nv); margin-bottom: 5px; backdrop-filter: blur(5px); }
-        .num { font-size: 1.8rem; font-weight: 900; color: var(--ac); font-family: monospace; display: block; }
+        .badge { background: rgba(0,0,0,0.85); padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--nv); margin-bottom: 8px; backdrop-filter: blur(5px); }
+        .num { font-size: 1.8rem; font-weight: 900; color: var(--ac); display: block; font-family: monospace; }
+        
         .video { width: 100%; aspect-ratio: 16/9; background: #000; }
         iframe { width: 100%; height: 100%; border: none; }
-        .sync-bar { background: #0a0a0a; padding: 10px; display: flex; gap: 10px; border-top: 1px solid #222; }
-        .sync-in { width: 120px; flex-grow: 0; }
+
+        .sync-bar { background: #0a0a0a; padding: 10px; display: flex; gap: 10px; align-items: center; border-top: 1px solid #222; }
     </style>
 </head>
 <body>
 
 <div class="nav">
-    <select id="p" style="flex-grow:0; width:100px;"><option value="k">KICK</option><option value="t">TWITCH</option><option value="y">YOUTUBE</option></select>
-    <input type="text" id="n" placeholder="NOME DO CANAL">
+    <select id="p" style="width: 100px;">
+        <option value="k">KICK</option>
+        <option value="t">TWITCH</option>
+        <option value="y">YOUTUBE</option>
+    </select>
+    <input type="text" id="n" placeholder="NOME DO CANAL (EX: JONVLOGS)">
     <button class="btn btn-add" onclick="add()">ADICIONAR</button>
 </div>
 
@@ -39,18 +53,18 @@
         const name = document.getElementById('n').value.trim();
         const plat = document.getElementById('p').value;
         if(!name) return;
+        
         let id = name.toLowerCase();
         let url = "";
-        const host = window.location.hostname;
+        const host = window.location.hostname || "localhost";
 
         if(plat === 'k') url = `https://player.kick.com/${id}`;
-        if(plat === 't') url = `https://player.twitch.tv/?channel=${id}&parent=${host}`;
+        if(plat === 't') url = `https://player.twitch.tv/?channel=${id}&parent=${host}&muted=false`;
         if(plat === 'y') url = `https://www.youtube.com/embed/live_stream?channel=${id}`;
 
         const obj = { id, url, v: 0 };
         list.push(obj);
         render(obj);
-        document.getElementById('n').value = "";
     }
 
     function render(obj) {
@@ -58,27 +72,27 @@
         div.className = 'card';
         div.innerHTML = `
             <div class="overlay">
-                <div class="badge"><span style="font-size:10px;color:#aaa;">AO VIVO</span><span class="num" id="v-${obj.id}">0</span></div>
+                <div class="badge">
+                    <span style="font-size:10px; color:#aaa;">AO VIVO</span>
+                    <span class="num" id="v-${obj.id}">0</span>
+                </div>
             </div>
-            <div class="video"><iframe src="${obj.url}" allowfullscreen></iframe></div>
+            <div class="video"><iframe src="${obj.url}" allowfullscreen allow="autoplay; encrypted-media"></iframe></div>
             <div class="sync-bar">
-                <input type="number" class="sync-in" id="iv-${obj.id}" placeholder="VALOR REAL">
-                <button class="btn" style="background:var(--ac);font-size:10px;" onclick="sync('${obj.id}')">SINCRONIZAR</button>
-                <button class="btn" style="background:red;color:#fff;font-size:10px;margin-left:auto;" onclick="this.parentElement.parentElement.remove()">SAIR</button>
+                <input type="number" id="iv-${obj.id}" placeholder="VIEWERS REAIS" style="width:120px;">
+                <button class="btn" style="background:var(--ac); color:#000; font-size:10px;" onclick="sync('${obj.id}')">OK</button>
+                <button class="btn" style="background:red; color:#fff; font-size:10px; margin-left:auto;" onclick="this.parentElement.parentElement.remove()">REMOVER</button>
             </div>
         `;
         document.getElementById('grid').appendChild(div);
         
-        // MOTOR DE TEMPO REAL (ATUALIZA A CADA 500MS)
         setInterval(() => {
             const item = list.find(x => x.id === obj.id);
-            const display = document.getElementById(`v-${obj.id}`);
-            if(item && item.v > 0 && display) {
-                // Oscilação de milissegundos (-3 a +3 pessoas)
-                item.v += Math.floor(Math.random() * 7) - 3;
-                display.innerText = item.v.toLocaleString('pt-BR');
+            if(item && item.v > 0) {
+                item.v += Math.floor(Math.random() * 5) - 2;
+                document.getElementById(`v-${obj.id}`).innerText = item.v.toLocaleString('pt-BR');
             }
-        }, 500);
+        }, 800);
     }
 
     function sync(id) {
