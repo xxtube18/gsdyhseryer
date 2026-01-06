@@ -2,44 +2,52 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>NEVETHON DASHBOARD PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEVETHON - DASHBOARD LIVE</title>
     <style>
         :root { --bg: #050505; --nv: #FF4500; --ac: #00F2FF; }
-        body { font-family: sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 15px; text-transform: uppercase; }
+        body { font-family: sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 15px; text-transform: uppercase; overflow-x: hidden; }
         
-        .nav { background: #111; padding: 15px; border-radius: 12px; border: 1px solid var(--nv); display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+        /* BARRA DE CONTROLE */
+        .nav { background: #111; padding: 15px; border-radius: 12px; border: 1px solid var(--nv); display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
         input, select { background: #000; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 5px; outline: none; }
+        input { flex-grow: 1; }
         
-        .btn { cursor: pointer; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; text-transform: uppercase; }
+        .btn { cursor: pointer; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
         .btn-add { background: var(--ac); color: #000; }
-        .btn-link { background: var(--nv); color: #fff; margin-left: auto; }
+        .btn-link { background: var(--nv); color: #fff; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 15px; }
-        .card { background: #000; border: 1px solid #222; border-radius: 10px; overflow: hidden; position: relative; }
+        /* GRADE DE LIVES */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px; }
+        .card { background: #000; border: 1px solid #222; border-radius: 15px; overflow: hidden; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        /* OVERLAY DOS NÚMEROS */
-        .stats { position: absolute; top: 10px; left: 10px; z-index: 10; pointer-events: none; }
-        .badge { background: rgba(0,0,0,0.9); padding: 8px 12px; border-radius: 5px; border-left: 3px solid var(--nv); margin-bottom: 5px; }
-        .num { font-size: 1.4rem; font-weight: 900; color: var(--ac); display: block; font-family: monospace; }
+        /* OVERLAY DOS DADOS (SOBREPOSTO À LIVE) */
+        .overlay { position: absolute; top: 15px; left: 15px; z-index: 10; pointer-events: none; }
+        .badge { background: rgba(0,0,0,0.85); padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--nv); margin-bottom: 8px; backdrop-filter: blur(5px); }
+        .num { font-size: 1.8rem; font-weight: 900; color: var(--ac); display: block; font-family: monospace; text-shadow: 0 0 10px rgba(0,242,255,0.5); }
+        .lab { font-size: 0.6rem; color: #aaa; letter-spacing: 1px; }
         
-        .video { width: 100%; aspect-ratio: 16/9; background: #000; }
+        /* VIDEO */
+        .video { width: 100%; aspect-ratio: 16/9; background: #000; display: block; }
         iframe { width: 100%; height: 100%; border: none; }
 
-        .controls { background: #0a0a0a; padding: 10px; display: flex; gap: 10px; align-items: center; border-top: 1px solid #222; }
-        .sync-in { width: 90px; padding: 5px; font-size: 12px; }
+        /* SINCRONIZADOR */
+        .sync-bar { background: #0a0a0a; padding: 10px; display: flex; gap: 10px; align-items: center; border-top: 1px solid #222; }
+        .sync-in { width: 110px; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div class="nav">
+    <div style="font-weight:900; color:var(--nv); margin-right:10px;">NEVETHON PRO</div>
     <select id="p">
         <option value="k">KICK</option>
         <option value="t">TWITCH</option>
         <option value="y">YOUTUBE</option>
     </select>
     <input type="text" id="n" placeholder="NOME DO CANAL (EX: JONVLOGS)">
-    <button class="btn btn-add" onclick="add()">ADICIONAR</button>
-    <button class="btn btn-link" onclick="share()">🔗 GERAR LINK</button>
+    <button class="btn btn-add" onclick="add()">ADICIONAR MONITOR</button>
+    <button class="btn btn-link" onclick="share()">🔗 COMPARTILHAR LINK</button>
 </div>
 
 <div id="grid" class="grid"></div>
@@ -69,60 +77,82 @@
     function render(obj) {
         const div = document.createElement('div');
         div.className = 'card';
+        div.id = `card-${obj.id}`;
         div.innerHTML = `
-            <div class="stats">
+            <div class="overlay">
                 <div class="badge">
-                    <span style="font-size:10px;color:#888;">AO VIVO</span>
+                    <span class="lab">🔴 ASSISTINDO AGORA</span>
                     <span class="num" id="v-${obj.id}">0</span>
                 </div>
                 <div class="badge" style="border-left-color:var(--ac)">
-                    <span style="font-size:10px;color:#888;">SUBS</span>
+                    <span class="lab">💎 TOTAL DE SUBS</span>
                     <span class="num" id="s-${obj.id}">0</span>
                 </div>
             </div>
             <div class="video"><iframe src="${obj.url}" allowfullscreen></iframe></div>
-            <div class="controls">
-                <input type="number" class="sync-in" id="iv-${obj.id}" placeholder="VIEWERS">
-                <input type="number" class="sync-in" id="is-${obj.id}" placeholder="SUBS">
-                <button class="btn" style="background:var(--ac);padding:5px;font-size:10px;" onclick="sync('${obj.id}')">OK</button>
-                <button class="btn" style="background:red;color:#fff;padding:5px;font-size:10px;margin-left:auto;" onclick="this.parentElement.parentElement.remove()">REMOVER</button>
+            <div class="sync-bar">
+                <input type="number" class="sync-in" id="iv-${obj.id}" placeholder="VIEWERS REAIS">
+                <input type="number" class="sync-input sync-in" id="is-${obj.id}" placeholder="SUBS REAIS">
+                <button class="btn" style="background:var(--ac); color:#000; padding:5px 10px; font-size:10px;" onclick="sync('${obj.id}')">OK</button>
+                <button class="btn" style="background:red; color:#fff; padding:5px 10px; font-size:10px; margin-left:auto;" onclick="remove('${obj.id}')">REMOVER</button>
             </div>
         `;
         document.getElementById('grid').appendChild(div);
         
-        // Loop de animação milisegundos
+        // MOTOR DE ATUALIZAÇÃO EM MILISSEGUNDOS
         setInterval(() => {
             const item = list.find(x => x.id === obj.id);
+            const vDisplay = document.getElementById(`v-${obj.id}`);
+            const sDisplay = document.getElementById(`s-${obj.id}`);
+            
             if(item && item.v > 0) {
-                item.v += Math.floor(Math.random() * 5) - 2;
-                document.getElementById(`v-${obj.id}`).innerText = item.v.toLocaleString('pt-BR');
-                document.getElementById(`s-${obj.id}`).innerText = item.s.toLocaleString('pt-BR');
+                // Oscilação natural para parecer tempo real extremo
+                let change = Math.floor(Math.random() * 9) - 4; // -4 a +4
+                item.v += change;
+                if(item.v < 0) item.v = 0;
+                
+                vDisplay.innerText = item.v.toLocaleString('pt-BR');
+                sDisplay.innerText = item.s.toLocaleString('pt-BR');
             }
         }, 700);
     }
 
     function sync(id) {
-        const v = document.getElementById(`iv-${id}`).value;
-        const s = document.getElementById(`is-${id}`).value;
+        const vVal = document.getElementById(`iv-${id}`).value;
+        const sVal = document.getElementById(`is-${id}`).value;
         const item = list.find(x => x.id === id);
         if(item) {
-            if(v) item.v = parseInt(v);
-            if(s) item.s = parseInt(s);
+            if(vVal) item.v = parseInt(vVal);
+            if(sVal) item.s = parseInt(sVal);
         }
     }
 
+    function remove(id) {
+        list = list.filter(x => x.id !== id);
+        document.getElementById(`card-${id}`).remove();
+    }
+
     function share() {
+        if(list.length === 0) return alert("Adicione uma live primeiro!");
         const config = btoa(JSON.stringify(list));
-        const finalUrl = window.location.href.split('?')[0] + "?config=" + config;
-        prompt("LINK DO EVENTO PRONTO:", finalUrl);
+        const finalUrl = window.location.origin + window.location.pathname + "?config=" + config;
+        const tempInput = document.createElement("input");
+        document.body.appendChild(tempInput);
+        tempInput.value = finalUrl;
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+        alert("Link copiado com sucesso!");
     }
 
     window.onload = () => {
-        const p = new URLSearchParams(window.location.search);
-        const c = p.get('config');
-        if(c) {
-            list = JSON.parse(atob(c));
-            list.forEach(render);
+        const urlParams = new URLSearchParams(window.location.search);
+        const config = urlParams.get('config');
+        if(config) {
+            try {
+                list = JSON.parse(atob(config));
+                list.forEach(render);
+            } catch(e) { console.log("Erro ao carregar configuração"); }
         }
     }
 </script>
