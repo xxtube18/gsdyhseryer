@@ -28,73 +28,72 @@
             align-items: center; box-shadow: 0 0 30px rgba(255, 69, 0, 0.3);
         }
 
-        .brand { font-weight: 900; background: linear-gradient(to right, var(--nevethon), #FFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.6rem; letter-spacing: 2px; }
+        .brand { 
+            font-weight: 900; 
+            background: linear-gradient(to right, var(--nevethon), #FFF); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            font-size: 1.6rem; 
+            letter-spacing: 2px;
+        }
 
-        input, select { padding: 12px; border-radius: 8px; border: 1px solid #333; background: rgba(0,0,0,0.8); color: WHITE; outline: none; text-transform: UPPERCASE; font-weight: BOLD; }
+        input, select { 
+            padding: 12px; border-radius: 8px; border: 1px solid #333; 
+            background: rgba(0,0,0,0.8); color: WHITE; outline: none; 
+            text-transform: UPPERCASE; font-weight: BOLD;
+        }
 
         button { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 900; transition: 0.3s; text-transform: UPPERCASE; }
         .btn-add { background: var(--accent); color: #000; }
-        .btn-share { background: var(--nevethon); color: #FFF; }
+        .btn-share { background: var(--nevethon); color: #FFF; box-shadow: 0 0 20px rgba(255, 69, 0, 0.4); }
 
         .stream-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 20px; }
         .video-container { position: relative; background: #000; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 2px solid #222; }
+        
         iframe { width: 100%; height: 100%; border: none; }
         
-        .remove-btn { position: absolute; top: 10px; right: 10px; background: rgba(255, 0, 0, 0.8); color: WHITE; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; z-index: 5; }
+        .remove-btn { position: absolute; top: 10px; right: 10px; background: rgba(255, 0, 0, 0.8); color: WHITE; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; z-index: 5; font-weight: 900; }
+        
+        .tag { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.8); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--accent); color: var(--accent); font-size: 12px; }
 
-        /* PAINEL DE ENCURTADOR */
-        .encurtador-container {
-            margin-top: 40px; padding: 20px; background: rgba(0,0,0,0.7);
-            border: 1px dashed var(--accent); border-radius: 15px;
-        }
-        .url-box { 
-            background: #111; padding: 15px; border-radius: 8px; 
-            margin-top: 10px; word-break: break-all; color: var(--save); 
-            border: 1px solid #333; display: none;
-        }
+        #shareArea { margin-top: 15px; padding: 20px; background: #000; border-radius: 10px; display: none; width: 100%; word-break: break-all; border: 2px dashed var(--nevethon); color: WHITE; font-size: 14px; line-height: 1.6; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div class="brand">NEVETHON @COACH_LIPEE</div>
-    <input type="text" id="streamInput" placeholder="NOME DO CANAL OU LINK">
+    <input type="text" id="streamInput" placeholder="NOME DO CANAL">
     <select id="platformSelect">
         <option value="twitch">TWITCH</option>
         <option value="kick">KICK</option>
         <option value="youtube">YOUTUBE</option>
     </select>
     <button class="btn-add" onclick="addNewStream()">+ ADICIONAR TELA</button>
-    <button class="btn-share" onclick="generateOriginalLink()">🔗 1. GERAR LINK BRUTO</button>
-    <button onclick="clearAll()" style="background:transparent; color:#666; border:1px solid #333;">RESET</button>
+    <button class="btn-share" onclick="generateShareLink()">🔗 GERAR LINK NEVETHON</button>
+    <button onclick="clearAll()" style="background:transparent; color:#666; border:1px solid #333;">LIMPAR TUDO</button>
+    <div id="shareArea"></div>
 </div>
 
 <div id="grid" class="stream-grid"></div>
 
-<div class="encurtador-container">
-    <h3>2. PERSONALIZAR NOME DO LINK</h3>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <input type="text" id="rawLinkInput" style="flex-grow: 1;" placeholder="COLE O LINK BRUTO AQUI">
-        <input type="text" id="customName" placeholder="NOME (EX: NEVETHON-DO-JON)" value="NEVETHON-DO-JON-multstream">
-        <button onclick="createCustomLink()" style="background: var(--save); color: #000;">CRIAR LINK COM NOME</button>
-    </div>
-    <div id="resultBox" class="url-box"></div>
-</div>
-
 <script>
-    const DB_KEY = 'NEVETHON_STABLE_V7';
+    const DB_KEY = 'NEVETHON_FINAL_V4';
     let activeStreams = [];
 
     window.onload = function() {
         const urlParams = new URLSearchParams(window.location.search);
         const config = urlParams.get('config');
+
         if (config) {
             try {
                 activeStreams = JSON.parse(atob(config));
                 saveToLocal(); 
                 activeStreams.forEach(item => renderStream(item.val, item.type));
             } catch(e) { loadFromLocal(); }
-        } else { loadFromLocal(); }
+        } else {
+            loadFromLocal();
+        }
     };
 
     function loadFromLocal() {
@@ -110,7 +109,11 @@
         const platform = document.getElementById('platformSelect').value;
         let val = input.value.trim();
         if (!val) return;
-        if (val.includes("/")) val = val.split('/').filter(Boolean).pop().split('?')[0];
+
+        // Se o usuário colou um link, extraímos apenas o nome
+        if (val.includes("twitch.tv/")) val = val.split("twitch.tv/")[1].split("/")[0].split("?")[0];
+        if (val.includes("kick.com/")) val = val.split("kick.com/")[1].split("/")[0].split("?")[0];
+        if (val.includes("youtube.com/watch?v=")) val = val.split("v=")[1].split("&")[0];
 
         activeStreams.push({ val: val, type: platform });
         renderStream(val, platform);
@@ -121,50 +124,52 @@
     function renderStream(channel, type) {
         const domain = window.location.hostname || "localhost";
         let url = "";
+
         if (type === "twitch") url = `https://player.twitch.tv/?channel=${channel}&parent=${domain}`;
         else if (type === "kick") url = `https://player.kick.com/${channel}`;
         else if (type === "youtube") url = `https://www.youtube-nocookie.com/embed/${channel}?autoplay=1`;
 
         const div = document.createElement('div');
         div.className = 'video-container';
-        div.innerHTML = `<button class="remove-btn" onclick="removeStream('${channel}', this)">X</button><iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+        div.innerHTML = `
+            <button class="remove-btn" onclick="removeStream('${channel}', this)">REMOVER</button>
+            <div class="tag">${type.toUpperCase()}: ${channel.toUpperCase()}</div>
+            <iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+        `;
         document.getElementById('grid').appendChild(div);
+        return true;
     }
 
-    function generateOriginalLink() {
-        if (activeStreams.length === 0) return alert("ADICIONE TELAS!");
+    function generateShareLink() {
+        if (activeStreams.length === 0) return alert("ADICIONE TELAS PRIMEIRO!");
         const encoded = btoa(JSON.stringify(activeStreams));
-        const shareUrl = window.location.origin + window.location.pathname + "?config=" + encoded;
         
-        // Coloca automaticamente no campo de encurtar para facilitar
-        document.getElementById('rawLinkInput').value = shareUrl;
+        // FORÇANDO O NOME NO LINK GERADO
+        const baseUrl = "https://xxtube18.github.io/NEVETHON-DO-JON-multstream";
+        const shareUrl = baseUrl + "?config=" + encoded;
+        
+        const area = document.getElementById('shareArea');
+        area.style.display = "block";
+        area.innerHTML = `<strong>LINK DO EVENTO PRONTO:</strong><br><span style="color:var(--accent)">${shareUrl}</span>`;
+        
         navigator.clipboard.writeText(shareUrl);
-        alert("LINK BRUTO COPIADO! AGORA USE O PAINEL ABAIXO PARA PERSONALIZAR.");
-    }
-
-    function createCustomLink() {
-        const raw = document.getElementById('rawLinkInput').value;
-        const name = document.getElementById('customName').value.trim();
-        
-        if (!raw || !name) return alert("COLE O LINK E DIGITE UM NOME!");
-
-        // Pega apenas a parte do código (?config=...) do link bruto
-        const configPart = raw.split('?')[1] || "";
-        
-        // Monta o link final com o nome que você quer
-        const finalUrl = `https://xxtube18.github.io/${name}?${configPart}`;
-        
-        const box = document.getElementById('resultBox');
-        box.style.display = "block";
-        box.innerHTML = `<strong>LINK COM SEU NOME PRONTO:</strong><br>${finalUrl}`;
-        
-        navigator.clipboard.writeText(finalUrl);
-        alert("LINK PERSONALIZADO COPIADO!");
+        alert("LINK COPIADO COM SUCESSO!");
     }
 
     function saveToLocal() { localStorage.setItem(DB_KEY, JSON.stringify(activeStreams)); }
-    function removeStream(val, btn) { activeStreams = activeStreams.filter(i => i.val !== val); saveToLocal(); btn.parentElement.remove(); }
-    function clearAll() { localStorage.removeItem(DB_KEY); location.href = window.location.origin + window.location.pathname; }
+    
+    function removeStream(val, btn) {
+        activeStreams = activeStreams.filter(i => i.val !== val);
+        saveToLocal();
+        btn.parentElement.remove();
+    }
+
+    function clearAll() {
+        if(confirm("LIMPAR TUDO?")) {
+            localStorage.removeItem(DB_KEY);
+            location.href = window.location.pathname;
+        }
+    }
 </script>
 </body>
 </html>
