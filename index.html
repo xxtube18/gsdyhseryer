@@ -2,19 +2,17 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Multi-Stream Dashboard PRO</title>
+    <title>MULTSTREAM DO @COACH_LIPEE</title>
     <style>
         :root { --bg: #0a0a0c; --panel: #18181b; --accent: #00d1ff; --save: #53fc18; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 15px; }
         
         .header {
-            background: var(--panel);
-            padding: 15px;
-            border-radius: 8px;
+            background: var(--panel); padding: 15px; border-radius: 8px;
             display: flex; gap: 10px; flex-wrap: wrap;
-            margin-bottom: 20px; border: 1px solid #333;
-            align-items: center;
+            margin-bottom: 20px; border: 1px solid #333; align-items: center;
         }
+        .brand { font-weight: bold; color: var(--accent); margin-right: 10px; font-size: 1.2rem; }
         input { flex-grow: 1; padding: 12px; border-radius: 4px; border: 1px solid #444; background: #000; color: white; min-width: 200px; }
         select { padding: 12px; border-radius: 4px; background: #222; color: white; border: 1px solid #444; cursor: pointer; }
         
@@ -24,29 +22,27 @@
         .btn-clear { background: #ff4444; color: white; }
 
         .stream-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-            gap: 15px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 15px;
         }
         .video-container {
-            position: relative; background: #000;
-            aspect-ratio: 16 / 9; border: 2px solid #2f2f35;
-            border-radius: 6px; overflow: hidden;
+            position: relative; background: #000; aspect-ratio: 16 / 9; 
+            border: 2px solid #2f2f35; border-radius: 6px; overflow: hidden;
         }
         iframe { width: 100%; height: 100%; border: none; }
-        .remove-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.8); color: white; border: none; padding: 5px 10px; cursor: pointer; z-index: 10; border-radius: 4px; }
-        .label-tag { position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.6); padding: 2px 8px; font-size: 10px; border-radius: 4px; text-transform: uppercase; }
+        .remove-btn { position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.8); color: white; border: none; padding: 5px 10px; cursor: pointer; z-index: 10; border-radius: 4px; }
+        .label-tag { position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.7); padding: 4px 10px; font-size: 11px; border-radius: 4px; border: 1px solid #444; pointer-events: none; }
 
         #shareArea {
-            margin-top: 10px; padding: 10px; background: #222;
-            border-radius: 4px; display: none; width: 100%;
-            word-break: break-all; color: var(--save); font-size: 13px; border: 1px dashed var(--save);
+            margin-top: 10px; padding: 10px; background: #111; border-radius: 4px; 
+            display: none; width: 100%; word-break: break-all; color: var(--save); 
+            font-size: 13px; border: 1px dashed var(--save);
         }
     </style>
 </head>
 <body>
 
 <div class="header">
+    <div class="brand">MULTSTREAM DO @COACH_LIPEE</div>
     <input type="text" id="streamInput" placeholder="Nome do canal ou Link completo">
     <select id="platformSelect">
         <option value="twitch">Twitch</option>
@@ -59,56 +55,72 @@
     <div id="shareArea"></div>
 </div>
 
-<div class="stream-grid" id="grid"></div>
+<div id="grid" class="stream-grid"></div>
 
 <script>
+    // Usamos uma chave única para evitar conflitos com versões antigas
+    const DB_KEY = 'coach_lipee_streams_final';
     let activeStreams = [];
 
+    // 1. CARREGAR AO INICIAR
     window.onload = function() {
         const urlParams = new URLSearchParams(window.location.search);
         const config = urlParams.get('config');
+
         if (config) {
             try {
+                // Se vier de um link compartilhado, carrega e guarda na memória
                 activeStreams = JSON.parse(atob(config));
+                saveToLocal(); 
                 activeStreams.forEach(item => renderStream(item.val, item.type));
-            } catch(e) { loadLocal(); }
-        } else { loadLocal(); }
+            } catch(e) { loadFromLocal(); }
+        } else {
+            loadFromLocal();
+        }
     };
 
-    function loadLocal() {
-        activeStreams = JSON.parse(localStorage.getItem('myStreamsV2')) || [];
-        activeStreams.forEach(item => renderStream(item.val, item.type));
+    function loadFromLocal() {
+        const stored = localStorage.getItem(DB_KEY);
+        if (stored) {
+            activeStreams = JSON.parse(stored);
+            activeStreams.forEach(item => renderStream(item.val, item.type));
+        }
     }
 
     function addNewStream() {
         const input = document.getElementById('streamInput');
         const platform = document.getElementById('platformSelect').value;
-        const val = input.value.trim();
+        let val = input.value.trim();
         
-        if (val) {
-            // Se o usuário colou um link, tentamos identificar a plataforma automaticamente
-            let finalType = platform;
-            if (val.includes("youtube.com") || val.includes("youtu.be")) finalType = "youtube";
-            if (val.includes("twitch.tv")) finalType = "twitch";
-            if (val.includes("kick.com")) finalType = "kick";
+        if (!val) return;
 
-            if (renderStream(val, finalType)) {
-                activeStreams.push({ val: val, type: finalType });
-                saveLocal();
-                input.value = "";
-            }
+        let detectedType = platform;
+        if (val.includes("youtube.com") || val.includes("youtu.be")) detectedType = "youtube";
+        else if (val.includes("twitch.tv")) detectedType = "twitch";
+        else if (val.includes("kick.com")) detectedType = "kick";
+
+        // Adiciona à lista ANTES de renderizar para garantir o save
+        activeStreams.push({ val: val, type: detectedType });
+        if (renderStream(val, detectedType)) {
+            saveToLocal();
+            input.value = "";
+        } else {
+            activeStreams.pop(); // Remove se falhar
         }
     }
 
-    function renderStream(val, type) {
+    function renderStream(inputVal, type) {
+        let channelName = inputVal;
         let embedUrl = "";
-        let channelName = val;
         const domain = window.location.hostname || "localhost";
 
-        // Se for um link, extrai apenas o nome/ID para o player
-        if (val.includes("http")) {
-            channelName = val.split('/').filter(Boolean).pop().split(/[?#]/)[0];
-            if (val.includes("v=")) channelName = val.split("v=")[1].split("&")[0];
+        // Limpeza de URL para extrair o nome/ID
+        if (inputVal.includes("http")) {
+            if (inputVal.includes("v=")) {
+                channelName = inputVal.split("v=")[1].split("&")[0];
+            } else {
+                channelName = inputVal.split('/').filter(Boolean).pop().split(/[?#]/)[0];
+            }
         }
 
         if (type === "twitch") {
@@ -122,9 +134,10 @@
         if (embedUrl) {
             const div = document.createElement('div');
             div.className = 'video-container';
+            div.id = "container-" + btoa(inputVal).substring(0,10); // ID único
             div.innerHTML = `
-                <button class="remove-btn" onclick="removeStream('${val}', this)">Remover</button>
-                <div class="label-tag">${type}: ${channelName}</div>
+                <button class="remove-btn" onclick="removeStream('${inputVal}', this)">Remover</button>
+                <div class="label-tag"><strong>${type.toUpperCase()}:</strong> ${channelName}</div>
                 <iframe src="${embedUrl}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
             `;
             document.getElementById('grid').appendChild(div);
@@ -133,29 +146,31 @@
         return false;
     }
 
+    function saveToLocal() {
+        localStorage.setItem(DB_KEY, JSON.stringify(activeStreams));
+    }
+
+    function removeStream(val, btn) {
+        activeStreams = activeStreams.filter(item => item.val !== val);
+        saveToLocal();
+        btn.parentElement.remove();
+    }
+
     function generateShareLink() {
         if (activeStreams.length === 0) return alert("Adicione telas primeiro!");
         const encoded = btoa(JSON.stringify(activeStreams));
         const shareUrl = window.location.origin + window.location.pathname + "?config=" + encoded;
         const area = document.getElementById('shareArea');
         area.style.display = "block";
-        area.innerText = "LINK CONFIGURADO: " + shareUrl;
+        area.innerHTML = `<strong>LINK DO EVENTO:</strong><br>${shareUrl}`;
         navigator.clipboard.writeText(shareUrl);
-        alert("Link de evento copiado!");
-    }
-
-    function saveLocal() { localStorage.setItem('myStreamsV2', JSON.stringify(activeStreams)); }
-
-    function removeStream(val, btn) {
-        activeStreams = activeStreams.filter(item => item.val !== val);
-        saveLocal();
-        btn.parentElement.remove();
+        alert("Link copiado! Pode enviar para as pessoas.");
     }
 
     function clearAll() {
-        if(confirm("Limpar tudo?")) {
+        if(confirm("Deseja apagar tudo?")) {
             activeStreams = [];
-            saveLocal();
+            localStorage.removeItem(DB_KEY);
             document.getElementById('grid').innerHTML = "";
             window.history.pushState({}, '', window.location.pathname);
             document.getElementById('shareArea').style.display = "none";
