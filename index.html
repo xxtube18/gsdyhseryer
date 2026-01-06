@@ -2,157 +2,100 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>MULTSTREAM DO @COACH_LIPEE</title>
+    <title>NEVETHON-DO-JON-MULTSTREAM</title>
     <style>
         :root { 
             --bg: #050505; 
-            --panel: rgba(20, 20, 25, 0.8); 
-            --accent: #00f2ff; /* Ciano Neon */
-            --secondary: #9d00ff; /* Roxo Neon */
-            --save: #39ff14; /* Verde Neon */
-            --danger: #ff0055; 
+            --panel: rgba(15, 15, 20, 0.95); 
+            --accent: #00F2FF; 
+            --nevethon: #FF4500; /* LARANJA VIBRANTE */
+            --save: #39FF14; 
         }
 
-        /* Fundo Animado */
         body { 
-            font-family: 'Poppins', 'Segoe UI', sans-serif; 
-            background: linear-gradient(-45deg, #050505, #12002b, #001a1a, #050505);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            color: white; 
-            margin: 0; 
-            padding: 20px;
-            min-height: 100vh;
+            font-family: 'Poppins', sans-serif; 
+            background: radial-gradient(circle at center, #1A0033, #050505);
+            color: WHITE; margin: 0; padding: 20px; min-height: 100vh;
+            text-transform: UPPERCASE; /* FORÇA TUDO EM MAIÚSCULO */
         }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* Cabeçalho Estilo Vidro */
         .header {
             background: var(--panel);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 15px;
+            backdrop-filter: blur(15px);
+            padding: 20px; border-radius: 15px;
             display: flex; gap: 12px; flex-wrap: wrap;
-            margin-bottom: 30px; 
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            align-items: center;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            margin-bottom: 30px; border: 2px solid var(--nevethon);
+            align-items: center; box-shadow: 0 0 30px rgba(255, 69, 0, 0.3);
         }
 
         .brand { 
             font-weight: 900; 
-            font-style: italic;
-            background: linear-gradient(to right, var(--accent), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 1.5rem;
-            text-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
-            letter-spacing: 1px;
+            background: linear-gradient(to right, var(--nevethon), #FFF); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            font-size: 1.6rem; 
+            letter-spacing: 2px;
         }
 
-        input { 
-            flex-grow: 1; padding: 12px 15px; border-radius: 8px; 
-            border: 1px solid #333; background: rgba(0,0,0,0.6); 
-            color: white; outline: none; transition: 0.3s;
+        input, select { 
+            padding: 12px; border-radius: 8px; border: 1px solid #333; 
+            background: rgba(0,0,0,0.8); color: WHITE; outline: none; 
+            text-transform: UPPERCASE; font-weight: BOLD;
         }
-        input:focus { border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        input:focus { border-color: var(--nevethon); box-shadow: 0 0 15px rgba(255, 69, 0, 0.5); }
 
-        select { 
-            padding: 12px; border-radius: 8px; background: #111; 
-            color: white; border: 1px solid #333; cursor: pointer;
-        }
+        button { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 900; transition: 0.3s; text-transform: UPPERCASE; }
+        .btn-add { background: var(--accent); color: #000; }
+        .btn-share { background: var(--nevethon); color: #FFF; box-shadow: 0 0 20px rgba(255, 69, 0, 0.4); }
+        .btn-share:hover { transform: scale(1.05); box-shadow: 0 0 35px rgba(255, 69, 0, 0.7); }
 
-        /* Botões com Efeito Glow */
-        button { 
-            padding: 12px 20px; border-radius: 8px; border: none; 
-            cursor: pointer; font-weight: bold; text-transform: uppercase;
-            transition: 0.3s; letter-spacing: 1px;
-        }
-
-        .btn-add { background: var(--accent); color: #000; box-shadow: 0 0 15px rgba(0, 242, 255, 0.4); }
-        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 0 25px var(--accent); }
-
-        .btn-share { background: var(--save); color: #000; box-shadow: 0 0 15px rgba(57, 255, 20, 0.3); }
-        .btn-share:hover { transform: translateY(-2px); box-shadow: 0 0 25px var(--save); }
-
-        .btn-clear { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
-        .btn-clear:hover { background: var(--danger); color: white; }
-
-        /* Grid e Containers */
-        .stream-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 20px;
-        }
-        .video-container {
-            position: relative; background: #000; aspect-ratio: 16 / 9; 
-            border-radius: 12px; overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: 0.4s;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
-        .video-container:hover { 
-            border-color: var(--secondary);
-            transform: scale(1.02);
-            box-shadow: 0 0 30px rgba(157, 0, 255, 0.3);
-        }
-
+        .stream-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 20px; }
+        .video-container { position: relative; background: #000; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 2px solid #222; transition: 0.4s; }
+        .video-container:hover { border-color: var(--nevethon); transform: scale(1.01); }
+        
         iframe { width: 100%; height: 100%; border: none; }
+        
+        .remove-btn { position: absolute; top: 10px; right: 10px; background: rgba(255, 0, 0, 0.8); color: WHITE; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; z-index: 5; font-weight: 900; }
+        
+        .tag { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.8); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--accent); color: var(--accent); font-size: 12px; }
 
-        .remove-btn { 
-            position: absolute; top: 10px; right: 10px; 
-            background: rgba(255, 0, 85, 0.8); color: white; 
-            border: none; padding: 6px 12px; cursor: pointer; 
-            z-index: 10; border-radius: 6px; font-size: 12px;
-        }
-
-        .label-tag { 
-            position: absolute; bottom: 12px; left: 12px; 
-            background: rgba(0, 0, 0, 0.8); padding: 5px 12px; 
-            font-size: 11px; border-radius: 20px; border: 1px solid var(--accent);
-            color: var(--accent); font-weight: bold;
-        }
-
-        #shareArea {
-            margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.5); 
-            border-radius: 10px; display: none; width: 100%; 
-            word-break: break-all; color: var(--save); 
-            font-size: 13px; border: 1px dashed var(--save);
-            animation: fadeIn 0.5s;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
+        #shareArea { margin-top: 15px; padding: 20px; background: #000; border-radius: 10px; display: none; width: 100%; word-break: break-all; border: 2px dashed var(--nevethon); color: WHITE; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="brand">MULTSTREAM @COACH_LIPEE</div>
-    <input type="text" id="streamInput" placeholder="ID do Canal ou Link (Ex: jonvlogs)">
+    <div class="brand">NEVETHON @COACH_LIPEE</div>
+    <input type="text" id="eventName" value="NEVETHON-DO-JON" placeholder="NOME DO EVENTO">
+    <input type="text" id="streamInput" placeholder="NOME DO CANAL OU LINK">
     <select id="platformSelect">
-        <option value="twitch">Twitch</option>
-        <option value="kick">Kick</option>
-        <option value="youtube">YouTube</option>
+        <option value="twitch">TWITCH</option>
+        <option value="kick">KICK</option>
+        <option value="youtube">YOUTUBE</option>
     </select>
-    <button class="btn-add" onclick="addNewStream()">+ Adicionar</button>
-    <button class="btn-share" onclick="generateShareLink()">🔗 Link do Evento</button>
-    <button class="btn-clear" onclick="clearAll()">Reset</button>
+    <button class="btn-add" onclick="addNewStream()">+ ADICIONAR TELA</button>
+    <button class="btn-share" onclick="generateShareLink()">🔗 GERAR LINK NEVETHON</button>
+    <button onclick="clearAll()" style="background:transparent; color:#666; border:1px solid #333;">LIMPAR TUDO</button>
     <div id="shareArea"></div>
 </div>
 
 <div id="grid" class="stream-grid"></div>
 
 <script>
-    const DB_KEY = 'coach_lipee_final_pro';
+    const DB_KEY = 'NEVETHON_FINAL_STORAGE';
     let activeStreams = [];
 
     window.onload = function() {
         const urlParams = new URLSearchParams(window.location.search);
         const config = urlParams.get('config');
+        const eventParam = urlParams.get('event');
+
+        if (eventParam) {
+            const decoded = decodeURIComponent(eventParam).toUpperCase();
+            document.getElementById('pageTitle').innerText = decoded + "-MULTSTREAM";
+            document.getElementById('eventName').value = decoded;
+        }
+
         if (config) {
             try {
                 activeStreams = JSON.parse(atob(config));
@@ -176,46 +119,44 @@
         let val = input.value.trim();
         if (!val) return;
 
-        let detectedType = platform;
-        if (val.includes("youtube.com") || val.includes("youtu.be")) detectedType = "youtube";
-        else if (val.includes("twitch.tv")) detectedType = "twitch";
-        else if (val.includes("kick.com")) detectedType = "kick";
+        let type = platform;
+        if (val.includes("youtube.com") || val.includes("youtu.be")) type = "youtube";
+        else if (val.includes("twitch.tv")) type = "twitch";
+        else if (val.includes("kick.com")) type = "kick";
 
-        activeStreams.push({ val: val, type: detectedType });
-        if (renderStream(val, detectedType)) {
-            saveToLocal();
-            input.value = "";
-        } else { activeStreams.pop(); }
+        activeStreams.push({ val: val, type: type });
+        if (renderStream(val, type)) { 
+            saveToLocal(); 
+            input.value = ""; 
+        } else { 
+            activeStreams.pop(); 
+        }
     }
 
     function renderStream(inputVal, type) {
-        let channelName = inputVal;
-        let embedUrl = "";
+        let channel = inputVal;
         const domain = window.location.hostname || "localhost";
-
+        
         if (inputVal.includes("http")) {
             if (inputVal.includes("v=")) {
-                channelName = inputVal.split("v=")[1].split("&")[0];
+                channel = inputVal.split("v=")[1].split("&")[0];
             } else {
-                channelName = inputVal.split('/').filter(Boolean).pop().split(/[?#]/)[0];
+                channel = inputVal.split('/').filter(Boolean).pop().split(/[?#]/)[0];
             }
         }
 
-        if (type === "twitch") {
-            embedUrl = `https://player.twitch.tv/?channel=${channelName}&parent=${domain}`;
-        } else if (type === "kick") {
-            embedUrl = `https://player.kick.com/${channelName}`;
-        } else if (type === "youtube") {
-            embedUrl = `https://www.youtube-nocookie.com/embed/${channelName}?autoplay=1`;
-        }
+        let url = "";
+        if (type === "twitch") url = `https://player.twitch.tv/?channel=${channel}&parent=${domain}`;
+        else if (type === "kick") url = `https://player.kick.com/${channel}`;
+        else if (type === "youtube") url = `https://www.youtube-nocookie.com/embed/${channel}?autoplay=1`;
 
-        if (embedUrl) {
+        if (url) {
             const div = document.createElement('div');
             div.className = 'video-container';
             div.innerHTML = `
-                <button class="remove-btn" onclick="removeStream('${inputVal}', this)">Remover</button>
-                <div class="label-tag">${type.toUpperCase()}: ${channelName}</div>
-                <iframe src="${embedUrl}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+                <button class="remove-btn" onclick="removeStream('${inputVal}', this)">REMOVER</button>
+                <div class="tag">${type.toUpperCase()}: ${channel.toUpperCase()}</div>
+                <iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
             `;
             document.getElementById('grid').appendChild(div);
             return true;
@@ -223,32 +164,29 @@
         return false;
     }
 
-    function saveToLocal() { localStorage.setItem(DB_KEY, JSON.stringify(activeStreams)); }
-
-    function removeStream(val, btn) {
-        activeStreams = activeStreams.filter(item => item.val !== val);
-        saveToLocal();
-        btn.parentElement.remove();
-    }
-
     function generateShareLink() {
-        if (activeStreams.length === 0) return alert("Adicione telas primeiro!");
+        if (activeStreams.length === 0) return alert("ADICIONE TELAS PRIMEIRO!");
+        const name = encodeURIComponent(document.getElementById('eventName').value.toUpperCase() || "NEVETHON");
         const encoded = btoa(JSON.stringify(activeStreams));
-        const shareUrl = window.location.origin + window.location.pathname + "?config=" + encoded;
+        const shareUrl = window.location.origin + window.location.pathname + "?event=" + name + "&config=" + encoded;
+        
         const area = document.getElementById('shareArea');
         area.style.display = "block";
-        area.innerHTML = `<strong>LINK DO EVENTO PRONTO:</strong><br>${shareUrl}`;
+        area.innerHTML = `<strong>LINK DO EVENTO GERADO COM SUCESSO:</strong><br>${shareUrl}`;
         navigator.clipboard.writeText(shareUrl);
-        alert("Link gerado e copiado para a área de transferência!");
+        alert("LINK COPIADO! AGORA É SÓ DIVULGAR!");
     }
 
-    function clearAll() {
-        if(confirm("Deseja apagar tudo?")) {
-            activeStreams = [];
-            localStorage.removeItem(DB_KEY);
-            document.getElementById('grid').innerHTML = "";
-            window.history.pushState({}, '', window.location.pathname);
-            document.getElementById('shareArea').style.display = "none";
+    function saveToLocal() { localStorage.setItem(DB_KEY, JSON.stringify(activeStreams)); }
+    function removeStream(val, btn) { 
+        activeStreams = activeStreams.filter(i => i.val !== val); 
+        saveToLocal(); 
+        btn.parentElement.remove(); 
+    }
+    function clearAll() { 
+        if(confirm("LIMPAR TUDO?")) {
+            localStorage.removeItem(DB_KEY); 
+            location.href = window.location.pathname; 
         }
     }
 </script>
