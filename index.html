@@ -8,7 +8,7 @@
             --bg: #050505; 
             --panel: rgba(15, 15, 20, 0.95); 
             --accent: #00F2FF; 
-            --nevethon: #FF4500; /* LARANJA VIBRANTE */
+            --nevethon: #FF4500; 
             --save: #39FF14; 
         }
 
@@ -16,7 +16,7 @@
             font-family: 'Poppins', sans-serif; 
             background: radial-gradient(circle at center, #1A0033, #050505);
             color: WHITE; margin: 0; padding: 20px; min-height: 100vh;
-            text-transform: UPPERCASE; /* FORÇA TUDO EM MAIÚSCULO */
+            text-transform: UPPERCASE;
         }
 
         .header {
@@ -42,16 +42,13 @@
             background: rgba(0,0,0,0.8); color: WHITE; outline: none; 
             text-transform: UPPERCASE; font-weight: BOLD;
         }
-        input:focus { border-color: var(--nevethon); box-shadow: 0 0 15px rgba(255, 69, 0, 0.5); }
 
         button { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 900; transition: 0.3s; text-transform: UPPERCASE; }
         .btn-add { background: var(--accent); color: #000; }
         .btn-share { background: var(--nevethon); color: #FFF; box-shadow: 0 0 20px rgba(255, 69, 0, 0.4); }
-        .btn-share:hover { transform: scale(1.05); box-shadow: 0 0 35px rgba(255, 69, 0, 0.7); }
 
         .stream-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 20px; }
-        .video-container { position: relative; background: #000; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 2px solid #222; transition: 0.4s; }
-        .video-container:hover { border-color: var(--nevethon); transform: scale(1.01); }
+        .video-container { position: relative; background: #000; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 2px solid #222; }
         
         iframe { width: 100%; height: 100%; border: none; }
         
@@ -59,15 +56,14 @@
         
         .tag { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.8); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--accent); color: var(--accent); font-size: 12px; }
 
-        #shareArea { margin-top: 15px; padding: 20px; background: #000; border-radius: 10px; display: none; width: 100%; word-break: break-all; border: 2px dashed var(--nevethon); color: WHITE; font-size: 14px; }
+        #shareArea { margin-top: 15px; padding: 20px; background: #000; border-radius: 10px; display: none; width: 100%; word-break: break-all; border: 2px dashed var(--nevethon); color: WHITE; font-size: 14px; line-height: 1.6; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div class="brand">NEVETHON @COACH_LIPEE</div>
-    <input type="text" id="eventName" value="NEVETHON-DO-JON" placeholder="NOME DO EVENTO">
-    <input type="text" id="streamInput" placeholder="NOME DO CANAL OU LINK">
+    <input type="text" id="streamInput" placeholder="NOME DO CANAL">
     <select id="platformSelect">
         <option value="twitch">TWITCH</option>
         <option value="kick">KICK</option>
@@ -82,19 +78,12 @@
 <div id="grid" class="stream-grid"></div>
 
 <script>
-    const DB_KEY = 'NEVETHON_FINAL_STORAGE';
+    const DB_KEY = 'NEVETHON_FINAL_V4';
     let activeStreams = [];
 
     window.onload = function() {
         const urlParams = new URLSearchParams(window.location.search);
         const config = urlParams.get('config');
-        const eventParam = urlParams.get('event');
-
-        if (eventParam) {
-            const decoded = decodeURIComponent(eventParam).toUpperCase();
-            document.getElementById('pageTitle').innerText = decoded + "-MULTSTREAM";
-            document.getElementById('eventName').value = decoded;
-        }
 
         if (config) {
             try {
@@ -102,7 +91,9 @@
                 saveToLocal(); 
                 activeStreams.forEach(item => renderStream(item.val, item.type));
             } catch(e) { loadFromLocal(); }
-        } else { loadFromLocal(); }
+        } else {
+            loadFromLocal();
+        }
     };
 
     function loadFromLocal() {
@@ -119,74 +110,64 @@
         let val = input.value.trim();
         if (!val) return;
 
-        let type = platform;
-        if (val.includes("youtube.com") || val.includes("youtu.be")) type = "youtube";
-        else if (val.includes("twitch.tv")) type = "twitch";
-        else if (val.includes("kick.com")) type = "kick";
+        // Se o usuário colou um link, extraímos apenas o nome
+        if (val.includes("twitch.tv/")) val = val.split("twitch.tv/")[1].split("/")[0].split("?")[0];
+        if (val.includes("kick.com/")) val = val.split("kick.com/")[1].split("/")[0].split("?")[0];
+        if (val.includes("youtube.com/watch?v=")) val = val.split("v=")[1].split("&")[0];
 
-        activeStreams.push({ val: val, type: type });
-        if (renderStream(val, type)) { 
-            saveToLocal(); 
-            input.value = ""; 
-        } else { 
-            activeStreams.pop(); 
-        }
+        activeStreams.push({ val: val, type: platform });
+        renderStream(val, platform);
+        saveToLocal();
+        input.value = "";
     }
 
-    function renderStream(inputVal, type) {
-        let channel = inputVal;
+    function renderStream(channel, type) {
         const domain = window.location.hostname || "localhost";
-        
-        if (inputVal.includes("http")) {
-            if (inputVal.includes("v=")) {
-                channel = inputVal.split("v=")[1].split("&")[0];
-            } else {
-                channel = inputVal.split('/').filter(Boolean).pop().split(/[?#]/)[0];
-            }
-        }
-
         let url = "";
+
         if (type === "twitch") url = `https://player.twitch.tv/?channel=${channel}&parent=${domain}`;
         else if (type === "kick") url = `https://player.kick.com/${channel}`;
         else if (type === "youtube") url = `https://www.youtube-nocookie.com/embed/${channel}?autoplay=1`;
 
-        if (url) {
-            const div = document.createElement('div');
-            div.className = 'video-container';
-            div.innerHTML = `
-                <button class="remove-btn" onclick="removeStream('${inputVal}', this)">REMOVER</button>
-                <div class="tag">${type.toUpperCase()}: ${channel.toUpperCase()}</div>
-                <iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
-            `;
-            document.getElementById('grid').appendChild(div);
-            return true;
-        }
-        return false;
+        const div = document.createElement('div');
+        div.className = 'video-container';
+        div.innerHTML = `
+            <button class="remove-btn" onclick="removeStream('${channel}', this)">REMOVER</button>
+            <div class="tag">${type.toUpperCase()}: ${channel.toUpperCase()}</div>
+            <iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+        `;
+        document.getElementById('grid').appendChild(div);
+        return true;
     }
 
     function generateShareLink() {
         if (activeStreams.length === 0) return alert("ADICIONE TELAS PRIMEIRO!");
-        const name = encodeURIComponent(document.getElementById('eventName').value.toUpperCase() || "NEVETHON");
         const encoded = btoa(JSON.stringify(activeStreams));
-        const shareUrl = window.location.origin + window.location.pathname + "?event=" + name + "&config=" + encoded;
+        
+        // FORÇANDO O NOME NO LINK GERADO
+        const baseUrl = "https://xxtube18.github.io/NEVETHON-DO-JON-multstream";
+        const shareUrl = baseUrl + "?config=" + encoded;
         
         const area = document.getElementById('shareArea');
         area.style.display = "block";
-        area.innerHTML = `<strong>LINK DO EVENTO GERADO COM SUCESSO:</strong><br>${shareUrl}`;
+        area.innerHTML = `<strong>LINK DO EVENTO PRONTO:</strong><br><span style="color:var(--accent)">${shareUrl}</span>`;
+        
         navigator.clipboard.writeText(shareUrl);
-        alert("LINK COPIADO! AGORA É SÓ DIVULGAR!");
+        alert("LINK COPIADO COM SUCESSO!");
     }
 
     function saveToLocal() { localStorage.setItem(DB_KEY, JSON.stringify(activeStreams)); }
-    function removeStream(val, btn) { 
-        activeStreams = activeStreams.filter(i => i.val !== val); 
-        saveToLocal(); 
-        btn.parentElement.remove(); 
+    
+    function removeStream(val, btn) {
+        activeStreams = activeStreams.filter(i => i.val !== val);
+        saveToLocal();
+        btn.parentElement.remove();
     }
-    function clearAll() { 
+
+    function clearAll() {
         if(confirm("LIMPAR TUDO?")) {
-            localStorage.removeItem(DB_KEY); 
-            location.href = window.location.pathname; 
+            localStorage.removeItem(DB_KEY);
+            location.href = window.location.pathname;
         }
     }
 </script>
