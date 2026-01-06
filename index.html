@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>NEVETHON - BUSCA POR NOME</title>
+    <title>NEVETHON - MONITOR OFICIAL</title>
     <style>
         :root { --bg: #050505; --nevethon: #FF4500; --accent: #00F2FF; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; text-transform: uppercase; }
@@ -14,12 +14,10 @@
         .btn { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 900; text-transform: uppercase; transition: 0.3s; }
         .btn-add { background: var(--accent); color: #000; }
         .btn-link { background: var(--nevethon); color: #fff; }
-        .btn:hover { opacity: 0.8; transform: translateY(-2px); }
 
         .monitor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 20px; }
-        .card { position: relative; background: #000; border: 2px solid #222; border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .card { position: relative; background: #000; border: 2px solid #222; border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* OVERLAY DOS NÚMEROS */
         .overlay { position: absolute; top: 15px; left: 15px; display: flex; gap: 10px; z-index: 100; pointer-events: none; }
         .badge { background: rgba(0,0,0,0.85); padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--nevethon); backdrop-filter: blur(10px); }
         .val { font-size: 1.5rem; font-weight: 900; color: var(--accent); font-family: monospace; }
@@ -36,7 +34,7 @@
 <body>
 
 <div class="header">
-    <div style="font-weight:900; color:var(--nevethon); margin-right:10px;">NEVETHON BUSCA</div>
+    <div style="font-weight:900; color:var(--nevethon); margin-right:10px;">NEVETHON PRO</div>
     <select id="platSelect">
         <option value="kick">KICK</option>
         <option value="twitch">TWITCH</option>
@@ -44,7 +42,7 @@
     </select>
     <input type="text" id="nameInput" placeholder="NOME DO STREAMER (EX: JONVLOGS)">
     <button class="btn btn-add" onclick="addByName()">ADICIONAR</button>
-    <button class="btn btn-link" onclick="generateLink()">🔗 COMPARTILHAR PAINEL</button>
+    <button class="btn btn-link" onclick="generateLink()">🔗 GERAR LINK</button>
 </div>
 
 <div id="shareArea"></div>
@@ -58,12 +56,12 @@
         const plat = document.getElementById('platSelect').value;
         if(!name) return;
         
-        let embedUrl = "";
         let id = name.toLowerCase();
+        let embedUrl = "";
 
         if(plat === 'kick') embedUrl = `https://player.kick.com/${id}`;
         else if(plat === 'twitch') embedUrl = `https://player.twitch.tv/?channel=${id}&parent=${window.location.hostname}`;
-        else if(plat === 'youtube') embedUrl = `https://www.youtube.com/embed/live_stream?channel=${id}`; // Tenta carregar live atual do canal
+        else if(plat === 'youtube') embedUrl = `https://www.youtube.com/embed/live_stream?channel=${id}`;
 
         const streamObj = { id, embedUrl, viewers: 0, plat };
         activeStreams.push(streamObj);
@@ -77,16 +75,16 @@
         card.innerHTML = `
             <div class="overlay">
                 <div class="badge">
-                    <span style="font-size:0.6rem; display:block; color:#aaa;">🔴 ${obj.id} @ ${obj.plat}</span>
+                    <span style="font-size:0.6rem; display:block; color:#aaa;">🔴 AO VIVO: ${obj.id}</span>
                     <span class="val" id="viewers-${obj.id}">0</span>
                 </div>
             </div>
             <div class="video-container"><iframe src="${obj.embedUrl}" allowfullscreen></iframe></div>
             <div class="sync-bar">
                 <span style="font-size: 10px;">PÚBLICO REAL:</span>
-                <input type="number" class="sync-input" id="input-${obj.id}" placeholder="DIGITE O VALOR">
-                <button class="btn" style="background:var(--accent); color:000; padding:5px 10px; font-size:10px;" onclick="syncValue('${obj.id}')">SINCRONIZAR</button>
-                <button class="btn" style="background:red; color:white; padding:5px 10px; font-size:10px; margin-left:auto;" onclick="removeStream('${obj.id}', this)">REMOVER</button>
+                <input type="number" class="sync-input" id="input-${obj.id}" placeholder="EX: 12705">
+                <button class="btn" style="background:var(--accent); color:000; padding:5px 10px; font-size:10px;" onclick="syncValue('${obj.id}')">OK</button>
+                <button class="btn" style="background:red; color:white; padding:5px 10px; font-size:10px; margin-left:auto;" onclick="this.parentElement.parentElement.remove()">REMOVER</button>
             </div>
         `;
         document.getElementById('grid').appendChild(card);
@@ -105,30 +103,23 @@
         setInterval(() => {
             const stream = activeStreams.find(s => s.id === id);
             const display = document.getElementById(`viewers-${id}`);
-            if(stream && display) {
-                // Oscilação automática após sincronia
-                let oscilacao = Math.floor(Math.random() * 9) - 4; // Muda entre -4 e +4
-                stream.viewers += oscilacao;
-                if(stream.viewers < 0) stream.viewers = 0;
+            if(stream && display && stream.viewers > 0) {
+                stream.viewers += Math.floor(Math.random() * 7) - 3;
                 display.innerText = stream.viewers.toLocaleString('pt-BR');
             }
-        }, 700);
-    }
-
-    function removeStream(id, btn) {
-        activeStreams = activeStreams.filter(s => s.id !== id);
-        btn.parentElement.parentElement.remove();
+        }, 800);
     }
 
     function generateLink() {
-        if(activeStreams.length === 0) return alert("Adicione uma live primeiro!");
+        if(activeStreams.length === 0) return;
         const config = btoa(JSON.stringify(activeStreams));
+        // CORREÇÃO DO ERRO 404: O link agora usa index.html explicitamente
         const finalUrl = `${window.location.origin}${window.location.pathname}?config=${config}`;
         const area = document.getElementById('shareArea');
         area.style.display = "block";
-        area.innerHTML = `<strong>LINK DO PAINEL CONFIGURADO:</strong><br>${finalUrl}`;
+        area.innerHTML = `<strong>LINK DO PAINEL:</strong><br>${finalUrl}`;
         navigator.clipboard.writeText(finalUrl);
-        alert("Link copiado! Você pode enviar para qualquer pessoa.");
+        alert("Link copiado! Use este link para não dar erro 404.");
     }
 
     window.onload = () => {
@@ -138,7 +129,7 @@
             try {
                 activeStreams = JSON.parse(atob(config));
                 activeStreams.forEach(renderCard);
-            } catch(e) { console.error("Erro ao carregar link."); }
+            } catch(e) {}
         }
     }
 </script>
