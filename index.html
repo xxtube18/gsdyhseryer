@@ -2,77 +2,24 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Multi-Stream Dashboard</title>
+    <title>Multi-Live Clean Mode</title>
     <style>
-        :root { --bg: #0e0e10; --panel: #18181b; --accent: #9146ff; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; margin: 0; padding: 15px; }
-        
-        /* Barra de Controle */
-        .header {
-            background: var(--panel);
-            padding: 15px;
-            border-radius: 8px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 20px;
-            border: 1px solid #333;
-        }
-        input {
-            flex-grow: 1;
-            padding: 12px;
-            border-radius: 4px;
-            border: 1px solid #444;
-            background: #000;
-            color: white;
-        }
-        button {
-            padding: 12px 20px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        button:hover { background: #772ce8; }
-
-        /* Grid de Vídeos */
-        .stream-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-            gap: 15px;
-        }
-        .video-container {
-            position: relative;
-            background: #000;
-            aspect-ratio: 16 / 9;
-            border: 2px solid #2f2f35;
-            border-radius: 4px;
-            overflow: hidden;
-        }
+        :root { --bg: #050505; --panel: #121212; --accent: #00ff88; }
+        body { font-family: sans-serif; background: var(--bg); color: white; margin: 0; padding: 15px; }
+        .header { background: var(--panel); padding: 15px; border-radius: 8px; display: flex; gap: 10px; margin-bottom: 20px; border: 1px solid #222; }
+        input { flex-grow: 1; padding: 12px; border-radius: 4px; border: 1px solid #333; background: #000; color: white; }
+        button { padding: 12px 20px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; background: var(--accent); color: #000; }
+        .stream-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 15px; }
+        .video-container { position: relative; background: #000; aspect-ratio: 16 / 9; border: 1px solid #333; }
         iframe { width: 100%; height: 100%; border: none; }
-        
-        .remove-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(255,0,0,0.8);
-            border: none;
-            color: white;
-            padding: 5px 10px;
-            cursor: pointer;
-            z-index: 10;
-            border-radius: 4px;
-        }
+        .remove-btn { position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.7); color: white; border: none; padding: 5px; cursor: pointer; z-index: 10; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <strong>MULTI-STREAM</strong>
-    <input type="text" id="streamUrl" placeholder="Cole o link original aqui (YouTube, Twitch ou Kik)">
-    <button onclick="addStream()">+ Adicionar Tela</button>
+    <input type="text" id="streamUrl" placeholder="Link da live aqui...">
+    <button onclick="addStream()">Adicionar Sem Distrações</button>
 </div>
 
 <div class="stream-grid" id="grid"></div>
@@ -86,33 +33,26 @@
         let embedUrl = "";
         const domain = window.location.hostname || "localhost";
 
-        // LÓGICA TWITCH
-        if (url.includes("twitch.tv")) {
-            const channel = url.split('/').filter(Boolean).pop();
-            embedUrl = `https://player.twitch.tv/?channel=${channel}&parent=${domain}`;
-        } 
-        // LÓGICA YOUTUBE
-        else if (url.includes("youtube.com") || url.includes("youtu.be")) {
+        // TRUQUE YOUTUBE: Usamos o domínio 'youtube-nocookie.com'
+        // Isso remove o rastreio de anúncios personalizado, o que reduz a carga de Ads.
+        if (url.includes("youtube.com") || url.includes("youtu.be")) {
             let id = url.includes("v=") ? url.split("v=")[1].split("&")[0] : url.split("/").pop();
-            embedUrl = `https://www.youtube.com/embed/${id}?autoplay=1`;
-        }
-        // LÓGICA KIK
-        else if (url.includes("kik.com")) {
-            const user = url.split('/').filter(Boolean).pop();
-            embedUrl = `https://player.kik.com/${user}`;
+            embedUrl = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&modestbranding=1&rel=0&iv_load_policy=3`;
+        } 
+        
+        // TRUQUE TWITCH: Usamos apenas o player essencial.
+        else if (url.includes("twitch.tv")) {
+            const channel = url.split('/').filter(Boolean).pop();
+            embedUrl = `https://player.twitch.tv/?channel=${channel}&parent=${domain}&muted=false`;
         }
 
         if (embedUrl) {
             const div = document.createElement('div');
             div.className = 'video-container';
-            div.innerHTML = `
-                <button class="remove-btn" onclick="this.parentElement.remove()">remover</button>
-                <iframe src="${embedUrl}" allowfullscreen allow="autoplay"></iframe>
-            `;
+            div.innerHTML = `<button class="remove-btn" onclick="this.parentElement.remove()">X</button>
+                             <iframe src="${embedUrl}" allowfullscreen sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>`;
             document.getElementById('grid').appendChild(div);
             input.value = "";
-        } else {
-            alert("Link não suportado!");
         }
     }
 </script>
