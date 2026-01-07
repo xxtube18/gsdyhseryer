@@ -2,130 +2,122 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>NEVETHON - MONITOR OFICIAL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscrição de Squad - CPN</title>
     <style>
-        :root { --bg: #050505; --nevethon: #FF4500; --accent: #00F2FF; }
-        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; text-transform: uppercase; }
-        
-        .header { background: rgba(15,15,20,0.98); padding: 20px; border-radius: 15px; border: 2px solid var(--nevethon); display: flex; gap: 10px; margin-bottom: 25px; align-items: center; flex-wrap: wrap; }
-        input { padding: 12px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; font-weight: bold; flex-grow: 1; outline: none; }
-        
-        .btn { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 900; text-transform: uppercase; }
-        .btn-add { background: var(--accent); color: #000; }
-        .btn-link { background: var(--nevethon); color: #fff; }
+        /* Estilo Moderno Dark */
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
 
-        .monitor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 20px; }
-        .card { position: relative; background: #000; border: 2px solid #222; border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; }
-        
-        .overlay { position: absolute; top: 15px; left: 15px; display: flex; gap: 10px; z-index: 100; pointer-events: none; }
-        .badge { background: rgba(0,0,0,0.85); padding: 10px 15px; border-radius: 8px; border-left: 4px solid var(--nevethon); backdrop-filter: blur(10px); }
-        .val { font-size: 1.5rem; font-weight: 900; color: var(--accent); font-family: monospace; }
-        
-        .video-container { width: 100%; aspect-ratio: 16/9; background: #000; }
-        iframe { width: 100%; height: 100%; border: none; }
+        .card {
+            background-color: #161b22;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 380px;
+            border: 1px solid #30363d;
+        }
 
-        .sync-bar { background: #111; padding: 10px; display: flex; gap: 10px; align-items: center; border-top: 1px solid #222; }
-        .sync-input { width: 100px; flex-grow: 0; font-size: 12px; padding: 5px; }
-        
-        #shareArea { margin-top: 20px; padding: 15px; border: 2px dashed var(--accent); color: var(--accent); display: none; word-break: break-all; border-radius: 10px; background: rgba(0,242,255,0.05); }
+        h2 {
+            text-align: center;
+            color: #58a6ff;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #238636;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 25px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #2ea043;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #8b949e;
+        }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div style="font-weight:900; color:var(--nevethon); margin-right:10px;">NEVETHON PRO</div>
-    <input type="text" id="urlInput" placeholder="LINK DA LIVE (KICK, YT, TWITCH)">
-    <button class="btn btn-add" onclick="addLive()">ADICIONAR</button>
-    <button class="btn btn-link" onclick="generateLink()">🔗 GERAR LINK</button>
+<div class="card">
+    <h2>Inscrição</h2>
+    
+    <form action="https://script.google.com/macros/s/AKfycbw0W8RgEWtBPwdqkRkOugJso-usl8dRs5hZU0FRisLX0buMJewgRLd8Ju2EcteQsxwk/exec" method="POST">
+        
+        <label>Nome do Jogador:</label>
+        <input type="text" name="nome" placeholder="Digite seu Nick" required>
+
+        <label>Função:</label>
+        <select name="funcao">
+            <option value="Bomba">Bomba 💣</option>
+            <option value="Rush">Rush 🏃</option>
+            <option value="Suporte">Suporte 🛡️</option>
+        </select>
+
+        <label class="checkbox-container">
+            <input type="checkbox" name="cpt" value="Sim">
+            É Capitão (CPT)?
+        </label>
+
+        <button type="submit">EFETUAR INSCRIÇÃO</button>
+    </form>
+    
+    <div class="footer">Organização CPN AXE</div>
 </div>
 
-<div id="shareArea"></div>
-<div id="grid" class="monitor-grid"></div>
-
-<script>
-    let activeStreams = [];
-
-    function addLive() {
-        const url = document.getElementById('urlInput').value.trim();
-        if(!url) return;
-        
-        let id = url.split('/').filter(Boolean).pop().split('?')[0];
-        let embedUrl = "";
-
-        if(url.includes('kick.com')) embedUrl = `https://player.kick.com/${id}`;
-        else if(url.includes('twitch.tv')) embedUrl = `https://player.twitch.tv/?channel=${id}&parent=${window.location.hostname}`;
-        else if(url.includes('youtube.com') || url.includes('youtu.be')) {
-            id = url.includes('v=') ? url.split('v=')[1].split('&')[0] : id;
-            embedUrl = `https://www.youtube.com/embed/${id}?autoplay=1`;
-        }
-
-        const streamObj = { id, embedUrl, viewers: 0 };
-        activeStreams.push(streamObj);
-        renderCard(streamObj);
-        document.getElementById('urlInput').value = "";
-    }
-
-    function renderCard(obj) {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <div class="overlay">
-                <div class="badge">
-                    <span style="font-size:0.6rem; display:block; color:#aaa;">🔴 AO VIVO</span>
-                    <span class="val" id="viewers-${obj.id}">0</span>
-                </div>
-            </div>
-            <div class="video-container"><iframe src="${obj.embedUrl}" allowfullscreen></iframe></div>
-            <div class="sync-bar">
-                <span style="font-size: 10px;">AJUSTE REAL:</span>
-                <input type="number" class="sync-input" id="input-${obj.id}" placeholder="Ex: 12705">
-                <button class="btn" style="background:var(--accent); color:000; padding:5px 10px; font-size:10px;" onclick="syncValue('${obj.id}')">OK</button>
-                <button class="btn" style="background:red; color:white; padding:5px 10px; font-size:10px; margin-left:auto;" onclick="this.parentElement.parentElement.remove()">SAIR</button>
-            </div>
-        `;
-        document.getElementById('grid').appendChild(card);
-        startLiveUpdate(obj.id);
-    }
-
-    function syncValue(id) {
-        const val = document.getElementById(`input-${id}`).value;
-        if(val) {
-            const stream = activeStreams.find(s => s.id === id);
-            if(stream) stream.viewers = parseInt(val);
-        }
-    }
-
-    function startLiveUpdate(id) {
-        setInterval(() => {
-            const stream = activeStreams.find(s => s.id === id);
-            const display = document.getElementById(`viewers-${id}`);
-            if(stream && display) {
-                // Oscilação em milissegundos para parecer tempo real
-                stream.viewers += Math.floor(Math.random() * 7) - 3;
-                if(stream.viewers < 0) stream.viewers = 0;
-                display.innerText = stream.viewers.toLocaleString('pt-BR');
-            }
-        }, 600);
-    }
-
-    function generateLink() {
-        const config = btoa(JSON.stringify(activeStreams));
-        const finalUrl = `${window.location.origin}${window.location.pathname}?config=${config}`;
-        const area = document.getElementById('shareArea');
-        area.style.display = "block";
-        area.innerHTML = `<strong>LINK DO MONITOR:</strong><br>${finalUrl}`;
-        navigator.clipboard.writeText(finalUrl);
-        alert("Link de compartilhamento copiado!");
-    }
-
-    window.onload = () => {
-        const params = new URLSearchParams(window.location.search);
-        const config = params.get('config');
-        if(config) {
-            activeStreams = JSON.parse(atob(config));
-            activeStreams.forEach(renderCard);
-        }
-    }
-</script>
 </body>
 </html>
